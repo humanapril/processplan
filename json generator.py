@@ -33,6 +33,7 @@ data_df.columns = headers
 data_df["Station"] = data_df["Station"].ffill()
 data_df["Step"] = data_df["Step"].fillna("").astype(str).str.zfill(3)
 data_df["Scan"] = data_df["Scan"].astype(str).str.strip().str.lower().map(lambda x: True if x == "true" else False)
+data_df["Trace"] = data_df["Trace"].astype(str).str.strip().str.lower()
 
 # Build operations
 for station, group in data_df.groupby("Station"):
@@ -53,7 +54,7 @@ for station, group in data_df.groupby("Station"):
     step_rows = group[group["Step"] != "000"]
     for _, row in step_rows.iterrows():
         materials = []
-        if pd.notna(row["Parts"]):
+        if pd.notna(row.get("Parts")):
             materials.append({
                 "inputMaterialPMlmId": "PLM_ID",
                 "materialName": "",
@@ -61,10 +62,10 @@ for station, group in data_df.groupby("Station"):
                 "materialNumber": str(row["Parts"]).strip(),
                 "materialTitle": "",
                 "units": "each",
-                "scan": row["Scan"]
+                "scan": row["Scan"],
+                "parentIdentifier": True if str(row.get("Trace", "")).lower() == "true" else False
             })
 
-        # Base segment
         segment = {
             "segmentTitle": row["Title"],
             "segmentName": "",
@@ -78,7 +79,7 @@ for station, group in data_df.groupby("Station"):
             }
         }
 
-        # Confirm sampleDefinition (always added)
+        # Confirm sampleDefinition
         confirm_sample = {
             "instructions": "Next?",
             "sampleDefinitionName": "",
