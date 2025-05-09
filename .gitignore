@@ -1,1 +1,10 @@
-Citrine1_200006524A_ops_only.json
+# Ignore everything in this folder
+ProcessPlan_json/**
+ProcessPlan_xlsx/**
+WorkInstructions/**
+
+# But not this specific file
+#!folder-name/keep-this-file.txt
+
+# Or not this specific subfolder
+#!folder-name/subfolder-to-keep/**
