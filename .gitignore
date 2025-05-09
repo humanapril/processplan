@@ -2,7 +2,7 @@
 ProcessPlan_json/**
 ProcessPlan_xlsx/**
 WorkInstructions/**
-
+**/.DS_Store
 # But not this specific file
 #!folder-name/keep-this-file.txt
 

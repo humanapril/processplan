@@ -22,7 +22,7 @@ predefined_segment = {
             "plmId": "PLM_ID",
             "sampleClass": "Actuator EOL Tester",
             "toolResourceInstance": "Actuator_Tester_1",
-            "sampleQty": 3,
+            "sampleQty": 1,
             "settings": {
                 "Configuration N/L/R": "N"
             },
