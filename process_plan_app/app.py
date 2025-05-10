@@ -5,14 +5,16 @@ import os
 import tempfile
 import zipfile
 
-app = Flask(__name__)
+# Initialize Flask app
+app = Flask(__name__, template_folder="templates", static_folder="static")
 
 # Dropdown options
 MATERIAL_LIST = [
     "SAPPHIRE", "LAPIS", "JADE", "CARROT",
-    "CITRINE", "PAPAYA" , "FINGER"
+    "CITRINE", "PAPAYA", "FINGER"
 ]
 
+# Converts all Python booleans to "True"/"False" strings
 def convert_bools(obj):
     if isinstance(obj, dict):
         return {k: convert_bools(v) for k, v in obj.items()}
@@ -22,6 +24,7 @@ def convert_bools(obj):
         return "True" if obj else "False"
     return obj
 
+# Processes all sheets in Excel file and writes JSONs
 def process_excel_sheets_to_jsons(excel_file_path, output_dir):
     xl = pd.ExcelFile(excel_file_path)
     generated_files = []
@@ -53,7 +56,7 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
             data_df = df.iloc[8:, 1:1+len(headers)]
             data_df.columns = headers
 
-            data_df["Station"] = data_df["Station"].ffill()
+            data_df["Station"] = data_df["Station"].ffill().infer_objects(copy=False)
             data_df["Step"] = data_df["Step"].fillna("").astype(str).str.zfill(3)
             data_df["Scan"] = data_df["Scan"].astype(str).str.lower().eq("true")
             data_df["Trace"] = data_df["Trace"].astype(str).str.lower().eq("true")
@@ -143,15 +146,17 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
             with open(json_path, "w") as f:
                 json.dump(convert_bools(metadata), f, indent=4)
             generated_files.append(json_path)
+
         except Exception as e:
             print(f"⚠️ Error processing sheet '{sheet_name}': {e}")
 
     return generated_files
 
+# Routes
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
-        file = request.files['file']
+        file = request.files.get('file')
         material = request.form.get('material')
 
         if not file or not file.filename.endswith('.xlsx'):
@@ -162,10 +167,14 @@ def index():
 
             with tempfile.TemporaryDirectory() as temp_output_dir:
                 json_files = process_excel_sheets_to_jsons(temp_input.name, temp_output_dir)
+                if not json_files:
+                    return "No valid sheets found in the Excel file.", 400
+
                 zip_path = os.path.join(temp_output_dir, f"{material}_jsons.zip")
                 with zipfile.ZipFile(zip_path, 'w') as zipf:
                     for jf in json_files:
                         zipf.write(jf, os.path.basename(jf))
+
                 return send_file(zip_path, as_attachment=True, download_name=f"{material}_jsons.zip")
 
     return render_template('index.html', materials=MATERIAL_LIST)
