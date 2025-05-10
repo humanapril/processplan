@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>JSON Process Plan Creation</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 2em;
+      }
+      h1 {
+        color: #2d6cdf;
+      }
+      form {
+        margin-top: 2em;
+      }
+      label {
+        display: block;
+        margin-top: 1em;
+      }
+      input[type="submit"] {
+        margin-top: 1.5em;
+        padding: 0.5em 1em;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>JSON Process Plan Creation</h1>
+    <form method="POST" enctype="multipart/form-data">
+      <label for="material">Select Material:</label>
+      <select name="material" id="material" required>
+        {% for material in materials %}
+        <option value="{{ material }}">{{ material }}</option>
+        {% endfor %}
+      </select>
+
+      <label for="file">Upload Excel File (.xlsx):</label>
+      <input type="file" name="file" id="file" accept=".xlsx" required />
+
+      <input type="submit" value="Generate JSON" />
+    </form>
+  </body>
+</html>
