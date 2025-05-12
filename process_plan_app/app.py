@@ -65,7 +65,111 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
                 "segmentPlmId": "",
                 "segmentSequence": 0,
                 "operationInputMaterials": [],
-                "sampleDefinitions": [],
+                "sampleDefinitions": [                
+                    {
+                  "instructions": "Place the part on the tester device",
+                  "sampleDefinitionName": "",
+                  "plmId": "PLM_ID",
+                  "sampleClass": "Actuator EOL Tester",
+                  "toolResourceInstance": "Actuator_Tester_1",
+                  "sampleQty": 3,
+                  "settings": {
+                    "Configuration N/L/R": "N"
+                  },
+                  "attributes": {
+                    "PassFail": {
+                      "DataType": "BOOLEAN",
+                      "Required": True,
+                      "Description": "Pass or fail result",
+                      "Format": "",
+                      "Order": 1,
+                      "MinimumValue": "",
+                      "MaximumValue": ""
+                    },
+                    "TestRevision": {
+                      "DataType": "STRING",
+                      "Required": True,
+                      "Description": "Revision code",
+                      "Format": "DW",
+                      "Order": 2,
+                      "MinimumValue": "",
+                      "MaximumValue": ""
+                    },
+                    "TestCount": {
+                      "DataType": "INTEGER",
+                      "Required": True,
+                      "Description": "Number of test repetitions",
+                      "Format": "",
+                      "Order": 3,
+                      "MinimumValue": "",
+                      "MaximumValue": ""
+                    },
+                    "TestTimestamp": {
+                      "DataType": "STRING",
+                      "Required": True,
+                      "Description": "Time of test",
+                      "Format": "",
+                      "Order": 4,
+                      "MinimumValue": "",
+                      "MaximumValue": ""
+                    },
+                    "TestDuration": {
+                      "DataType": "INTEGER",
+                      "Required": True,
+                      "Description": "Duration of test (in s)",
+                      "Format": "",
+                      "Order": 5,
+                      "MinimumValue": "",
+                      "MaximumValue": ""
+                    },
+                    "RejectCode": {
+                      "DataType": "STRING",
+                      "Required": True,
+                      "Description": "Code for rejection reason",
+                      "Format": "",
+                      "Order": 6,
+                      "MinimumValue": "",
+                      "MaximumValue": ""
+                    },
+                    "RejectReason": {
+                      "DataType": "STRING",
+                      "Required": True,
+                      "Description": "Description of rejection reason",
+                      "Format": "DW",
+                      "Order": 7,
+                      "MinimumValue": "",
+                      "MaximumValue": ""
+                    },
+                    "URLString": {
+                      "DataType": "STRING",
+                      "Required": True,
+                      "Description": "Link to related documentation",
+                      "Format": "DW",
+                      "Order": 7,
+                      "MinimumValue": "",
+                      "MaximumValue": ""
+                    },
+                    "OperatorDetails": {
+                      "DataType": "STRING",
+                      "Required": True,
+                      "Description": "Name or ID of operator",
+                      "Format": "DW",
+                      "Order": 8,
+                      "MinimumValue": "",
+                      "MaximumValue": ""
+                    },
+                    "TestType": {
+                      "DataType": "STRING",
+                      "Required": True,
+                      "Description": "Type of test performed",
+                      "Format": "DW",
+                      "Order": 9,
+                      "MinimumValue": "",
+                      "MaximumValue": ""
+                    }
+                  }
+                }
+                ],
                 "workInstruction": {
                     "plmId": "PLM_ID",
                     "pdfLink": ""
