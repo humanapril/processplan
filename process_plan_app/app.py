@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, send_file, redirect, url_for
+from flask import Flask, render_template, request, send_file, jsonify
 import pandas as pd
 import json
 import os
@@ -6,6 +6,8 @@ import tempfile
 import zipfile
 from PyPDF2 import PdfReader, PdfWriter
 from werkzeug.utils import secure_filename
+import requests
+from requests.auth import HTTPBasicAuth
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
 
@@ -67,113 +69,58 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
                 "operationInputMaterials": [],
                 "sampleDefinitions": [                
                     {
-                  "instructions": "Place the part on the tester device",
-                  "sampleDefinitionName": "",
-                  "plmId": "PLM_ID",
-                  "sampleClass": "Actuator EOL Tester",
-                  "toolResourceInstance": "Actuator_Tester_1",
-                  "sampleQty": 3,
-                  "settings": {
-                    "Configuration N/L/R": "N"
-                  },
-                  "attributes": {
-                    "PassFail": {
-                      "DataType": "BOOLEAN",
-                      "Required": True,
-                      "Description": "Pass or fail result",
-                      "Format": "",
-                      "Order": 1,
-                      "MinimumValue": "",
-                      "MaximumValue": ""
-                    },
-                    "TestRevision": {
-                      "DataType": "STRING",
-                      "Required": True,
-                      "Description": "Revision code",
-                      "Format": "DW",
-                      "Order": 2,
-                      "MinimumValue": "",
-                      "MaximumValue": ""
-                    },
-                    "TestCount": {
-                      "DataType": "INTEGER",
-                      "Required": True,
-                      "Description": "Number of test repetitions",
-                      "Format": "",
-                      "Order": 3,
-                      "MinimumValue": "",
-                      "MaximumValue": ""
-                    },
-                    "TestTimestamp": {
-                      "DataType": "STRING",
-                      "Required": True,
-                      "Description": "Time of test",
-                      "Format": "",
-                      "Order": 4,
-                      "MinimumValue": "",
-                      "MaximumValue": ""
-                    },
-                    "TestDuration": {
-                      "DataType": "INTEGER",
-                      "Required": True,
-                      "Description": "Duration of test (in s)",
-                      "Format": "",
-                      "Order": 5,
-                      "MinimumValue": "",
-                      "MaximumValue": ""
-                    },
-                    "RejectCode": {
-                      "DataType": "STRING",
-                      "Required": True,
-                      "Description": "Code for rejection reason",
-                      "Format": "",
-                      "Order": 6,
-                      "MinimumValue": "",
-                      "MaximumValue": ""
-                    },
-                    "RejectReason": {
-                      "DataType": "STRING",
-                      "Required": True,
-                      "Description": "Description of rejection reason",
-                      "Format": "DW",
-                      "Order": 7,
-                      "MinimumValue": "",
-                      "MaximumValue": ""
-                    },
-                    "URLString": {
-                      "DataType": "STRING",
-                      "Required": True,
-                      "Description": "Link to related documentation",
-                      "Format": "DW",
-                      "Order": 7,
-                      "MinimumValue": "",
-                      "MaximumValue": ""
-                    },
-                    "OperatorDetails": {
-                      "DataType": "STRING",
-                      "Required": True,
-                      "Description": "Name or ID of operator",
-                      "Format": "DW",
-                      "Order": 8,
-                      "MinimumValue": "",
-                      "MaximumValue": ""
-                    },
-                    "TestType": {
-                      "DataType": "STRING",
-                      "Required": True,
-                      "Description": "Type of test performed",
-                      "Format": "DW",
-                      "Order": 9,
-                      "MinimumValue": "",
-                      "MaximumValue": ""
+                        "instructions": "Place the part on the tester device",
+                        "sampleDefinitionName": "",
+                        "plmId": "PLM_ID",
+                        "sampleClass": "Actuator EOL Tester",
+                        "toolResourceInstance": "Actuator_Tester_1",
+                        "sampleQty": 3,
+                        "settings": {"Configuration N/L/R": "N"},
+                        "attributes": {
+                            "PassFail": {
+                                "DataType": "BOOLEAN", "Required": True, "Description": "Pass or fail result", "Format": "", "Order": 1,
+                                "MinimumValue": "", "MaximumValue": ""
+                            },
+                            "TestRevision": {
+                                "DataType": "STRING", "Required": True, "Description": "Revision code", "Format": "DW", "Order": 2,
+                                "MinimumValue": "", "MaximumValue": ""
+                            },
+                            "TestCount": {
+                                "DataType": "INTEGER", "Required": True, "Description": "Number of test repetitions", "Format": "", "Order": 3,
+                                "MinimumValue": "", "MaximumValue": ""
+                            },
+                            "TestTimestamp": {
+                                "DataType": "STRING", "Required": True, "Description": "Time of test", "Format": "", "Order": 4,
+                                "MinimumValue": "", "MaximumValue": ""
+                            },
+                            "TestDuration": {
+                                "DataType": "INTEGER", "Required": True, "Description": "Duration of test (in s)", "Format": "", "Order": 5,
+                                "MinimumValue": "", "MaximumValue": ""
+                            },
+                            "RejectCode": {
+                                "DataType": "STRING", "Required": True, "Description": "Code for rejection reason", "Format": "", "Order": 6,
+                                "MinimumValue": "", "MaximumValue": ""
+                            },
+                            "RejectReason": {
+                                "DataType": "STRING", "Required": True, "Description": "Description of rejection reason", "Format": "DW", "Order": 7,
+                                "MinimumValue": "", "MaximumValue": ""
+                            },
+                            "URLString": {
+                                "DataType": "STRING", "Required": True, "Description": "Link to related documentation", "Format": "DW", "Order": 8,
+                                "MinimumValue": "", "MaximumValue": ""
+                            },
+                            "OperatorDetails": {
+                                "DataType": "STRING", "Required": True, "Description": "Name or ID of operator", "Format": "DW", "Order": 9,
+                                "MinimumValue": "", "MaximumValue": ""
+                            },
+                            "TestType": {
+                                "DataType": "STRING", "Required": True, "Description": "Type of test performed", "Format": "DW", "Order": 10,
+                                "MinimumValue": "", "MaximumValue": ""
+                            }
+                        }
                     }
-                  }
-                }
                 ],
-                "workInstruction": {
-                    "plmId": "PLM_ID",
-                    "pdfLink": ""
-                }
+                "workInstruction": {"plmId": "PLM_ID", "pdfLink": ""}
             }
 
             for station, group in data_df.groupby("Station"):
@@ -228,13 +175,8 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
                                     "sampleQty": 1,
                                     "attributes": {
                                         "PassFail": {
-                                            "DataType": "BOOLEAN",
-                                            "Required": True,
-                                            "Description": "STRING",
-                                            "Format": "#0.00",
-                                            "Order": "1",
-                                            "MinimumValue": "NUMERIC",
-                                            "MaximumValue": "NUMERIC"
+                                            "DataType": "BOOLEAN", "Required": True, "Description": "STRING", "Format": "#0.00", "Order": "1",
+                                            "MinimumValue": "", "MaximumValue": ""
                                         }
                                     }
                                 }
@@ -250,7 +192,7 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
                 metadata["operationsDefinitions"].append(operation)
 
             json_path = os.path.join(output_dir, f"{sheet_name}.json")
-            with open(json_path, "w") as f:
+            with open(json_path, "w", encoding="utf-8") as f:
                 json.dump(convert_bools(metadata), f, indent=4)
             generated_files.append(json_path)
 
@@ -319,6 +261,33 @@ def index():
                 return send_file(zip_path, as_attachment=True, download_name="split_pdfs.zip")
 
     return render_template("index.html", materials=MATERIAL_LIST)
+
+@app.route('/import', methods=['POST'])
+def import_single_json():
+    file = request.files.get('json_file')
+    if not file or not file.filename.endswith('.json'):
+        return jsonify({"error": "Invalid file type."}), 400
+
+    try:
+        data = json.load(file)
+        response = requests.post(
+            "https://mes.dev.figure.ai:60088/system/webdev/BotQ-MES/Operations/OperationsRouteManual",
+            json=data,
+            auth=HTTPBasicAuth('figure', 'figure'),
+            headers={"Content-Type": "application/json"},
+            timeout=120
+        )
+        return jsonify({
+            "filename": file.filename,
+            "status_code": response.status_code,
+            "response": response.text[:1000]
+        })
+    except Exception as e:
+        return jsonify({
+            "filename": file.filename,
+            "status_code": "Error",
+            "response": str(e)
+        })
 
 if __name__ == '__main__':
     app.run(debug=True)

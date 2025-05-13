@@ -2,60 +2,57 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Figure AI | Process Tools</title>
     <style>
       @font-face {
-        font-family: "NeueHaasDisplay";
+        font-family: "CustomFont";
         src: url("{{ url_for('static', filename='fonts/NeueHaasGrotDisp-55Roman.otf') }}")
-          format("opentype");
-        font-weight: normal;
-        font-style: normal;
-      }
-      @font-face {
-        font-family: "NeueHaasText";
-        src: url("{{ url_for('static', filename='fonts/NeueHaasGrotText-65Medium.otf') }}")
-          format("opentype");
-        font-weight: normal;
-        font-style: normal;
-      }
-      @font-face {
-        font-family: "Machina";
-        src: url("{{ url_for('static', filename='fonts/PPNeueMachina-PlainMedium.otf') }}")
           format("opentype");
         font-weight: normal;
         font-style: normal;
       }
 
       body {
-        font-family: "NeueHaasText", sans-serif;
+        font-family: "CustomFont", sans-serif;
         background-color: #0b0b0b;
         color: #9f9f9f;
         margin: 0;
         padding: 0;
       }
+
       .container {
         max-width: 700px;
         margin: 50px auto;
         padding: 30px;
-        background: linear-gradient(145deg, #1e1e1e, #2a2a2a);
+        background: #1e1e1e;
         border-radius: 15px;
-        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.7),
-          inset 0 0 5px rgba(255, 255, 255, 0.1);
         border: 1px solid #333;
       }
-      h2 {
-        text-align: center;
-        color: #797af2;
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
         margin-bottom: 30px;
-        font-family: "NeueHaasDisplay", sans-serif;
       }
+
+      .logo {
+        height: 50px;
+        object-fit: contain;
+      }
+
+      h2 {
+        color: #797af2;
+        margin: 0;
+      }
+
       label {
         font-weight: bold;
         color: #797af2;
         display: block;
         margin-top: 20px;
       }
+
       input[type="file"],
       select {
         width: 100%;
@@ -65,31 +62,32 @@
         border: 1px solid #444;
         color: #9f9f9f;
         border-radius: 5px;
-        font-family: "NeueHaasText", sans-serif;
       }
+
       button {
         margin-top: 20px;
-        background: linear-gradient(145deg, #1c1c1c, #2f2f2f);
+        background: #2f2f2f;
         color: #9f9f9f;
         padding: 15px 30px;
         border: 1px solid #444;
         border-radius: 8px;
         cursor: pointer;
-        font-size: 1.1rem;
+        font-size: 1rem;
         text-transform: uppercase;
-        font-weight: bold;
-        font-family: "Machina", sans-serif;
       }
+
       button:hover {
-        background: linear-gradient(145deg, #2f2f2f, #1c1c1c);
+        background: #3a3a3a;
         color: #797af2;
       }
+
       .tabs {
         display: flex;
         justify-content: center;
         gap: 20px;
         margin-bottom: 30px;
       }
+
       .tab {
         padding: 10px 20px;
         background: #2a2a2a;
@@ -97,48 +95,43 @@
         cursor: pointer;
         border-radius: 8px;
       }
+
       .tab.active {
         background: #797af2;
         color: white;
       }
+
       .form-section {
         display: none;
       }
+
       .form-section.active {
         display: block;
-      }
-      .logo {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        width: 120px;
-      }
-      .footer {
-        text-align: center;
-        margin-top: 50px;
-        font-size: 0.9rem;
-        color: #9f9f9f;
       }
     </style>
   </head>
   <body>
-    <img
-      src="{{ url_for('static', filename='images/logo.jpg') }}"
-      alt="Figure AI Logo"
-      class="logo"
-    />
-
     <div class="container">
-      <h2>Figure AI | Process Tools</h2>
+      <div class="header">
+        <h2>Figure AI | Process Tools</h2>
+        <img
+          src="{{ url_for('static', filename='images/logo.jpg') }}"
+          class="logo"
+          alt="Company Logo"
+        />
+      </div>
 
       <div class="tabs">
         <div class="tab active" onclick="switchTab('jsonForm')">
           JSON Generator
         </div>
         <div class="tab" onclick="switchTab('pdfForm')">Work Instructions</div>
+        <div class="tab" onclick="switchTab('importForm')">
+          Process Plan Import
+        </div>
       </div>
 
-      <!-- JSON FORM -->
+      <!-- JSON Form -->
       <form
         class="form-section active"
         id="jsonForm"
@@ -146,21 +139,18 @@
         enctype="multipart/form-data"
       >
         <input type="hidden" name="form_type" value="json" />
-
         <label for="material">Select Material:</label>
         <select name="material" id="material" required>
           {% for material in materials %}
           <option value="{{ material }}">{{ material }}</option>
           {% endfor %}
         </select>
-
         <label for="file">Upload Excel File (.xlsx):</label>
         <input type="file" name="file" id="file" accept=".xlsx" required />
-
         <button type="submit">Generate JSON ZIP</button>
       </form>
 
-      <!-- PDF FORM -->
+      <!-- PDF Form -->
       <form
         class="form-section"
         id="pdfForm"
@@ -168,7 +158,6 @@
         enctype="multipart/form-data"
       >
         <input type="hidden" name="form_type" value="pdf" />
-
         <label for="pdf_files">Upload PDF(s) to Split:</label>
         <input
           type="file"
@@ -178,14 +167,42 @@
           multiple
           required
         />
-
         <button type="submit">Split PDFs and Download ZIP</button>
+      </form>
+
+      <!-- Import Form -->
+      <form
+        class="form-section"
+        id="importForm"
+        enctype="multipart/form-data"
+        onsubmit="handleImportSubmit(event)"
+      >
+        <label for="json_file">Upload JSON File:</label>
+        <input
+          type="file"
+          name="json_file"
+          id="json_file"
+          accept=".json"
+          required
+        />
+        <button type="submit" id="importBtn">Upload and Post to MES</button>
+
+        <div id="progressContainer" style="display: none; margin-top: 20px">
+          <p>Initializing...</p>
+          <progress
+            id="progressBar"
+            value="0"
+            max="100"
+            style="width: 100%"
+          ></progress>
+        </div>
+
+        <div id="importResult" style="margin-top: 20px"></div>
       </form>
     </div>
 
-    <div class="footer">© Figure AI 2025. All Rights Reserved.</div>
-
     <script>
+      const tabIds = ["jsonForm", "pdfForm", "importForm"];
       function switchTab(formId) {
         document
           .querySelectorAll(".tab")
@@ -194,8 +211,83 @@
           .querySelectorAll(".form-section")
           .forEach((f) => f.classList.remove("active"));
         document.getElementById(formId).classList.add("active");
-        const index = formId === "jsonForm" ? 0 : 1;
-        document.querySelectorAll(".tab")[index].classList.add("active");
+        const index = tabIds.indexOf(formId);
+        if (index >= 0)
+          document.querySelectorAll(".tab")[index].classList.add("active");
+      }
+
+      async function handleImportSubmit(event) {
+        event.preventDefault();
+
+        const fileInput = document.getElementById("json_file");
+        const file = fileInput.files[0];
+        if (!file) return;
+
+        const button = document.getElementById("importBtn");
+        const progressBar = document.getElementById("progressBar");
+        const progressContainer = document.getElementById("progressContainer");
+        const resultBox = document.getElementById("importResult");
+
+        button.disabled = true;
+        resultBox.innerHTML = "";
+        progressContainer.style.display = "block";
+
+        const formData = new FormData();
+        formData.append("json_file", file);
+
+        const totalTimeout = 120000;
+        const steps = 5;
+        const stepInterval = totalTimeout / steps;
+        const stepProgress = 100 / steps;
+        let currentStep = 1;
+
+        const messagePara = document.querySelector("#progressContainer p");
+        progressBar.value = stepProgress;
+        messagePara.textContent = `Step ${currentStep} of ${steps} completed...`;
+
+        const intervalId = setInterval(() => {
+          currentStep++;
+          if (currentStep <= steps) {
+            progressBar.value = currentStep * stepProgress;
+            messagePara.textContent = `Step ${currentStep} of ${steps} completed...`;
+          }
+        }, stepInterval);
+
+        try {
+          const response = await fetch("/import", {
+            method: "POST",
+            body: formData,
+          });
+
+          const contentType = response.headers.get("Content-Type") || "";
+          let data;
+          if (contentType.includes("application/json")) {
+            data = await response.json();
+          } else {
+            const text = await response.text();
+            throw new Error("Server returned non-JSON response:\n" + text);
+          }
+
+          clearInterval(intervalId);
+          progressBar.value = 100;
+          messagePara.textContent = `Upload complete`;
+
+          resultBox.innerHTML = `
+          <p><strong>Filename:</strong> ${data.filename}</p>
+          <p><strong>Status Code:</strong> ${data.status_code}</p>
+          <pre style="white-space: pre-wrap; background: #1e1e1e; padding: 10px; border-radius: 5px;">${data.response}</pre>
+        `;
+        } catch (err) {
+          clearInterval(intervalId);
+          progressBar.value = 0;
+          messagePara.textContent = `Upload failed`;
+          resultBox.innerHTML = `<p style="color:red;">${err.message}</p>`;
+        } finally {
+          button.disabled = false;
+          setTimeout(() => {
+            progressContainer.style.display = "none";
+          }, 3000);
+        }
       }
     </script>
   </body>
