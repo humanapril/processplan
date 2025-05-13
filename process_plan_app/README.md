@@ -1,6 +1,6 @@
 # 📦 Process Plan History App
 
-A Flask-based web application for converting, uploading, storing, and reviewing process plan JSON files. 
+A Flask-based web application for converting, uploading, storing, and reviewing process plan JSON files.
 It includes user authentication, admin approval, and a history log of uploaded plans.
 
 ---
@@ -28,36 +28,35 @@ It includes user authentication, admin approval, and a history log of uploaded p
 
 ## 📂 Project Structure
 
-
 For PostgresDB
 
 ###Create users Table
 
 CREATE TABLE public.users (
-    id SERIAL PRIMARY KEY,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,
-    first_name VARCHAR(100),
-    last_name VARCHAR(100),
-    role VARCHAR(10) DEFAULT 'pending',  -- 'user', 'admin', or 'pending'
-    is_approved BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+id SERIAL PRIMARY KEY,
+email VARCHAR(255) UNIQUE NOT NULL,
+password_hash TEXT NOT NULL,
+first_name VARCHAR(100),
+last_name VARCHAR(100),
+role VARCHAR(10) DEFAULT 'pending', -- 'user', 'admin', or 'pending'
+is_approved BOOLEAN DEFAULT FALSE,
+created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-
 #### Approve and Promote a User
+
 UPDATE public.users
 SET role = 'admin', is_approved = true
 WHERE first_name = 'April';
 
-
 #### Create process_plan_history Table
+
 CREATE TABLE process_plan_history (
-    id SERIAL PRIMARY KEY,
-    user_email VARCHAR(255) NOT NULL,
-    uploaded_filename VARCHAR(255) NOT NULL,
-    upload_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    status_code VARCHAR(20),
-    response_summary TEXT,
-    json_blob BYTEA
+id SERIAL PRIMARY KEY,
+user_email VARCHAR(255) NOT NULL,
+uploaded_filename VARCHAR(255) NOT NULL,
+upload_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+status_code VARCHAR(20),
+response_summary TEXT,
+json_blob BYTEA
 );
