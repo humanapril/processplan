@@ -398,14 +398,17 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
                         operation["operationSegments"].append(segment)
 
                 metadata["operationsDefinitions"].append(operation)
-		output_path = os.path.join(output_dir, f"{sheet_name.strip()}.json")
-		with open(output_path, "w", encoding="utf-8") as f:
-    			json.dump(convert_bools(metadata), f, indent=2)
-		generated_files.append(output_path)
+                metadata["operationsDefinitions"].append(operation)
+                output_path = os.path.join(output_dir, f"{sheet_name.strip()}.json")
+                with open(output_path, "w", encoding="utf-8") as f:
+                    json.dump(convert_bools(metadata), f, indent=2)
+                generated_files.append(output_path)
 
 
         except Exception as e:
-            print(f"⚠️ Error processing sheet '{sheet_name}': {e}")
+            import traceback
+            traceback.print_exc()
+            raise RuntimeError(f"Error processing sheet '{sheet_name}': {e}")
 
     return generated_files
 
