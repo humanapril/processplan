@@ -83,9 +83,11 @@
 
       .tabs {
         display: flex;
-        justify-content: center;
-        gap: 20px;
+        justify-content: space-between;
         margin-bottom: 30px;
+        gap: 10px;
+        flex-wrap: nowrap; /* ✅ Prevent wrapping */
+        overflow-x: auto; /* Optional: scroll if too many tabs */
       }
 
       .tab {
@@ -134,18 +136,14 @@
         {% if current_user.is_authenticated %}
         <div style="color: #9f9f9f">
           Logged in as:<br />
-          <strong>{{ current_user.email }}</strong><br />
-          <strong>{{ current_user.role|capitalize }}</strong>
+          <strong>{{ current_user.email }}</strong>
         </div>
-
         <div style="margin-top: 10px">
           <a
             href="{{ url_for('logout') }}"
             style="color: #797af2; margin-right: 10px; text-decoration: none"
+            >Logout</a
           >
-            Logout
-          </a>
-
           {% if current_user.role == 'admin' %}
           <a href="{{ url_for('admin_approve') }}">
             <button
@@ -167,15 +165,13 @@
           <a
             href="{{ url_for('login') }}"
             style="color: #797af2; text-decoration: none; margin-right: 10px"
+            >Login</a
           >
-            Login
-          </a>
           <a
             href="{{ url_for('register') }}"
             style="color: #797af2; text-decoration: none"
+            >Register</a
           >
-            Register
-          </a>
         </div>
         {% endif %}
       </div>
@@ -187,6 +183,9 @@
         <div class="tab" onclick="switchTab('pdfForm')">Work Instructions</div>
         <div class="tab" onclick="switchTab('importForm')">
           Process Plan Import
+        </div>
+        <div class="tab" onclick="switchTab('historyTab')">
+          Process Plan History
         </div>
       </div>
 
@@ -258,10 +257,20 @@
 
         <div id="importResult" style="margin-top: 20px"></div>
       </form>
+
+      <!-- History Tab -->
+      <div class="form-section" id="historyTab">
+        <iframe
+          src="{{ url_for('process_history') }}"
+          width="100%"
+          height="600"
+          style="border: none"
+        ></iframe>
+      </div>
     </div>
 
     <script>
-      const tabIds = ["jsonForm", "pdfForm", "importForm"];
+      const tabIds = ["jsonForm", "pdfForm", "importForm", "historyTab"];
       function switchTab(formId) {
         document
           .querySelectorAll(".tab")

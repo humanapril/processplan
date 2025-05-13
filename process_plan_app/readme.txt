@@ -1,5 +1,4 @@
-###
-create user table
+###create user table
 
 CREATE TABLE public.users (
     id SERIAL PRIMARY KEY,
@@ -11,11 +10,21 @@ CREATE TABLE public.users (
     is_approved BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-###
 
 
+#### update users request 
 UPDATE public.users
 	SET role='admin', is_approved=true
 	WHERE first_name = 'April';
 
+####Create table for process plan 
 
+CREATE TABLE process_plan_history (
+    id SERIAL PRIMARY KEY,
+    user_email VARCHAR(255) NOT NULL,
+    uploaded_filename VARCHAR(255) NOT NULL,
+    upload_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status_code VARCHAR(20),
+    response_summary TEXT,
+    json_blob BYTEA
+);

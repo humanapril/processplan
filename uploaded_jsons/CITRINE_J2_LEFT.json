@@ -1,0 +1,1993 @@
+{
+  "scopeMaterialNumber": "200006524AAA",
+  "scopeMaterialTitle": "CITRINE J2 LEFT",
+  "scopeMaterialPlmId": "nan",
+  "areaName": "RobotAssembly1",
+  "lineName": "Citrine1",
+  "operationsDefinitions": [
+    {
+      "operationTitle": "Citrine J2 Left Station 10",
+      "operationName": "",
+      "operationPlmId": "",
+      "workstationName": "S010",
+      "operationSegments": [
+        {
+          "segmentTitle": "Scan housing",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [
+            {
+              "inputMaterialPMlmId": "PLM_ID",
+              "materialName": "",
+              "quantity": 1,
+              "materialNumber": "200003927C",
+              "materialTitle": "",
+              "units": "each",
+              "scan": "True",
+              "parentIdentifier": "True"
+            }
+          ],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-010.pdf",
+            "plmId": "PLM_ID"
+          }
+        },
+        {
+          "segmentTitle": "Install X-Roller Bearing",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [
+            {
+              "inputMaterialPMlmId": "PLM_ID",
+              "materialName": "",
+              "quantity": 1,
+              "materialNumber": "200002241A",
+              "materialTitle": "",
+              "units": "each",
+              "scan": "False",
+              "parentIdentifier": "False"
+            }
+          ],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-020.pdf",
+            "plmId": "PLM_ID"
+          }
+        },
+        {
+          "segmentTitle": "Install X-Roller Clamp",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [
+            {
+              "inputMaterialPMlmId": "PLM_ID",
+              "materialName": "",
+              "quantity": 1,
+              "materialNumber": "200002309A",
+              "materialTitle": "",
+              "units": "each",
+              "scan": "False",
+              "parentIdentifier": "False"
+            }
+          ],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-030.pdf",
+            "plmId": "PLM_ID"
+          }
+        },
+        {
+          "segmentTitle": "Install Flex Cup",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [
+            {
+              "inputMaterialPMlmId": "PLM_ID",
+              "materialName": "",
+              "quantity": 1,
+              "materialNumber": "200002492A",
+              "materialTitle": "",
+              "units": "each",
+              "scan": "True",
+              "parentIdentifier": "False"
+            }
+          ],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-040.pdf",
+            "plmId": "PLM_ID"
+          }
+        },
+        {
+          "segmentTitle": "Install Pressure Distributor",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [
+            {
+              "inputMaterialPMlmId": "PLM_ID",
+              "materialName": "",
+              "quantity": 1,
+              "materialNumber": "200000281A",
+              "materialTitle": "",
+              "units": "each",
+              "scan": "False",
+              "parentIdentifier": "False"
+            }
+          ],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-050.pdf",
+            "plmId": "PLM_ID"
+          }
+        },
+        {
+          "segmentTitle": "Fasten Pressure Distributor",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [
+            {
+              "inputMaterialPMlmId": "PLM_ID",
+              "materialName": "",
+              "quantity": 10,
+              "materialNumber": "200000390C",
+              "materialTitle": "",
+              "units": "each",
+              "scan": "False",
+              "parentIdentifier": "False"
+            }
+          ],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-060.pdf",
+            "plmId": "PLM_ID"
+          }
+        },
+        {
+          "segmentTitle": "Grease Flex Cup",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-070.pdf",
+            "plmId": "PLM_ID"
+          }
+        },
+        {
+          "segmentTitle": "Install Bearing Shim",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [
+            {
+              "inputMaterialPMlmId": "PLM_ID",
+              "materialName": "",
+              "quantity": 1,
+              "materialNumber": "200005493B",
+              "materialTitle": "",
+              "units": "each",
+              "scan": "False",
+              "parentIdentifier": "False"
+            }
+          ],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-080.pdf",
+            "plmId": "PLM_ID"
+          }
+        },
+        {
+          "segmentTitle": "Install Circular Spline",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [
+            {
+              "inputMaterialPMlmId": "PLM_ID",
+              "materialName": "",
+              "quantity": 1,
+              "materialNumber": "200002468A",
+              "materialTitle": "",
+              "units": "each",
+              "scan": "False",
+              "parentIdentifier": "False"
+            }
+          ],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-090.pdf",
+            "plmId": "PLM_ID"
+          }
+        },
+        {
+          "segmentTitle": "Place Rotor Adapter",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [
+            {
+              "inputMaterialPMlmId": "PLM_ID",
+              "materialName": "",
+              "quantity": 1,
+              "materialNumber": "200003124C",
+              "materialTitle": "",
+              "units": "each",
+              "scan": "False",
+              "parentIdentifier": "False"
+            }
+          ],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-100.pdf",
+            "plmId": "PLM_ID"
+          }
+        },
+        {
+          "segmentTitle": "Install Wave Generator",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [
+            {
+              "inputMaterialPMlmId": "PLM_ID",
+              "materialName": "",
+              "quantity": 1,
+              "materialNumber": "200002504A",
+              "materialTitle": "",
+              "units": "each",
+              "scan": "False",
+              "parentIdentifier": "False"
+            }
+          ],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-110.pdf",
+            "plmId": "PLM_ID"
+          }
+        },
+        {
+          "segmentTitle": "Fasten Wave Generator",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [
+            {
+              "inputMaterialPMlmId": "PLM_ID",
+              "materialName": "",
+              "quantity": 8,
+              "materialNumber": "200000576C",
+              "materialTitle": "",
+              "units": "each",
+              "scan": "False",
+              "parentIdentifier": "False"
+            }
+          ],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-120.pdf",
+            "plmId": "PLM_ID"
+          }
+        },
+        {
+          "segmentTitle": "Place Rotor onto fixture",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [
+            {
+              "inputMaterialPMlmId": "PLM_ID",
+              "materialName": "",
+              "quantity": 1,
+              "materialNumber": "200002175A",
+              "materialTitle": "",
+              "units": "each",
+              "scan": "False",
+              "parentIdentifier": "False"
+            }
+          ],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-130.pdf",
+            "plmId": "PLM_ID"
+          }
+        },
+        {
+          "segmentTitle": "Press Rotor Shaft",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [
+            {
+              "inputMaterialPMlmId": "PLM_ID",
+              "materialName": "",
+              "quantity": 1,
+              "materialNumber": "200003126C",
+              "materialTitle": "",
+              "units": "each",
+              "scan": "False",
+              "parentIdentifier": "False"
+            }
+          ],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-140.pdf",
+            "plmId": "PLM_ID"
+          }
+        },
+        {
+          "segmentTitle": "Place Rotor Collet",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [
+            {
+              "inputMaterialPMlmId": "PLM_ID",
+              "materialName": "",
+              "quantity": 1,
+              "materialNumber": "200003127A",
+              "materialTitle": "",
+              "units": "each",
+              "scan": "False",
+              "parentIdentifier": "False"
+            }
+          ],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-150.pdf",
+            "plmId": "PLM_ID"
+          }
+        },
+        {
+          "segmentTitle": "Start Rotor Collet fasteners",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [
+            {
+              "inputMaterialPMlmId": "PLM_ID",
+              "materialName": "",
+              "quantity": 6,
+              "materialNumber": "200000389A",
+              "materialTitle": "",
+              "units": "each",
+              "scan": "False",
+              "parentIdentifier": "False"
+            }
+          ],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-160.pdf",
+            "plmId": "PLM_ID"
+          }
+        },
+        {
+          "segmentTitle": "Install Wave Generator sub-assy",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-170.pdf",
+            "plmId": "PLM_ID"
+          }
+        },
+        {
+          "segmentTitle": "Fasten Rotor sub-assy",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-180.pdf",
+            "plmId": "PLM_ID"
+          }
+        },
+        {
+          "segmentTitle": "Fasten Rotor sub-assy",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-190.pdf",
+            "plmId": "PLM_ID"
+          }
+        },
+        {
+          "segmentTitle": "Yellow Piece",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [
+            {
+              "inputMaterialPMlmId": "PLM_ID",
+              "materialName": "",
+              "quantity": 1,
+              "materialNumber": "200005444B",
+              "materialTitle": "",
+              "units": "each",
+              "scan": "False",
+              "parentIdentifier": "False"
+            }
+          ],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-200.pdf",
+            "plmId": "PLM_ID"
+          }
+        },
+        {
+          "segmentTitle": "Install Yellow Piece Seal",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [
+            {
+              "inputMaterialPMlmId": "PLM_ID",
+              "materialName": "",
+              "quantity": 1,
+              "materialNumber": "200005440B",
+              "materialTitle": "",
+              "units": "each",
+              "scan": "False",
+              "parentIdentifier": "False"
+            }
+          ],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-210.pdf",
+            "plmId": "PLM_ID"
+          }
+        },
+        {
+          "segmentTitle": "Install Yellow Piece Bearing",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [
+            {
+              "inputMaterialPMlmId": "PLM_ID",
+              "materialName": "",
+              "quantity": 1,
+              "materialNumber": "200002493A",
+              "materialTitle": "",
+              "units": "each",
+              "scan": "False",
+              "parentIdentifier": "False"
+            }
+          ],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-220.pdf",
+            "plmId": "PLM_ID"
+          }
+        },
+        {
+          "segmentTitle": "Install Bearing Clamp",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [
+            {
+              "inputMaterialPMlmId": "PLM_ID",
+              "materialName": "",
+              "quantity": 1,
+              "materialNumber": "200003117A",
+              "materialTitle": "",
+              "units": "each",
+              "scan": "False",
+              "parentIdentifier": "False"
+            }
+          ],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-230.pdf",
+            "plmId": "PLM_ID"
+          }
+        },
+        {
+          "segmentTitle": "Install Yellow Piece sub-assy",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-240.pdf",
+            "plmId": "PLM_ID"
+          }
+        },
+        {
+          "segmentTitle": "Install Encoder Input Shaft",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [
+            {
+              "inputMaterialPMlmId": "PLM_ID",
+              "materialName": "",
+              "quantity": 1,
+              "materialNumber": "200002330C",
+              "materialTitle": "",
+              "units": "each",
+              "scan": "False",
+              "parentIdentifier": "False"
+            }
+          ],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-250.pdf",
+            "plmId": "PLM_ID"
+          }
+        },
+        {
+          "segmentTitle": "Pink Piece",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [
+            {
+              "inputMaterialPMlmId": "PLM_ID",
+              "materialName": "",
+              "quantity": 1,
+              "materialNumber": "200002236C",
+              "materialTitle": "",
+              "units": "each",
+              "scan": "False",
+              "parentIdentifier": "False"
+            }
+          ],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-260.pdf",
+            "plmId": "PLM_ID"
+          }
+        },
+        {
+          "segmentTitle": "Install Pink Piece Bearing",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [
+            {
+              "inputMaterialPMlmId": "PLM_ID",
+              "materialName": "",
+              "quantity": 1,
+              "materialNumber": "200003125A",
+              "materialTitle": "",
+              "units": "each",
+              "scan": "False",
+              "parentIdentifier": "False"
+            }
+          ],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-270.pdf",
+            "plmId": "PLM_ID"
+          }
+        },
+        {
+          "segmentTitle": "Install Pink Piece sub-assy",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [
+            {
+              "inputMaterialPMlmId": "PLM_ID",
+              "materialName": "",
+              "quantity": 5,
+              "materialNumber": "200000389A",
+              "materialTitle": "",
+              "units": "each",
+              "scan": "False",
+              "parentIdentifier": "False"
+            }
+          ],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-280.pdf",
+            "plmId": "PLM_ID"
+          }
+        },
+        {
+          "segmentTitle": "Install Output Encoder Shaft",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [
+            {
+              "inputMaterialPMlmId": "PLM_ID",
+              "materialName": "",
+              "quantity": 1,
+              "materialNumber": "200005521B",
+              "materialTitle": "",
+              "units": "each",
+              "scan": "False",
+              "parentIdentifier": "False"
+            }
+          ],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-290.pdf",
+            "plmId": "PLM_ID"
+          }
+        }
+      ]
+    },
+    {
+      "operationTitle": "Citrine J2 Left Station 30",
+      "operationName": "",
+      "operationPlmId": "",
+      "workstationName": "S030",
+      "operationSegments": [
+        {
+          "segmentTitle": "Scan housing",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-300.pdf",
+            "plmId": "PLM_ID"
+          }
+        },
+        {
+          "segmentTitle": "Install Output Encoder Ring",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [
+            {
+              "inputMaterialPMlmId": "PLM_ID",
+              "materialName": "",
+              "quantity": 1,
+              "materialNumber": "200000216C",
+              "materialTitle": "",
+              "units": "each",
+              "scan": "False",
+              "parentIdentifier": "False"
+            }
+          ],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-310.pdf",
+            "plmId": "PLM_ID"
+          }
+        },
+        {
+          "segmentTitle": "Install Input Encoder Ring",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [
+            {
+              "inputMaterialPMlmId": "PLM_ID",
+              "materialName": "",
+              "quantity": 1,
+              "materialNumber": "200002471B",
+              "materialTitle": "",
+              "units": "each",
+              "scan": "False",
+              "parentIdentifier": "False"
+            }
+          ],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-320.pdf",
+            "plmId": "PLM_ID"
+          }
+        },
+        {
+          "segmentTitle": "Apply TIM to Yellow Piece",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [
+            {
+              "inputMaterialPMlmId": "PLM_ID",
+              "materialName": "",
+              "quantity": 1,
+              "materialNumber": "200005943B",
+              "materialTitle": "",
+              "units": "each",
+              "scan": "False",
+              "parentIdentifier": "False"
+            }
+          ],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-330.pdf",
+            "plmId": "PLM_ID"
+          }
+        },
+        {
+          "segmentTitle": "Motor Controller Board",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [
+            {
+              "inputMaterialPMlmId": "PLM_ID",
+              "materialName": "",
+              "quantity": 1,
+              "materialNumber": "200002321C",
+              "materialTitle": "",
+              "units": "each",
+              "scan": "True",
+              "parentIdentifier": "False"
+            }
+          ],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-340.pdf",
+            "plmId": "PLM_ID"
+          }
+        },
+        {
+          "segmentTitle": "Install Harness",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [
+            {
+              "inputMaterialPMlmId": "PLM_ID",
+              "materialName": "",
+              "quantity": 1,
+              "materialNumber": "200003076A",
+              "materialTitle": "",
+              "units": "each",
+              "scan": "False",
+              "parentIdentifier": "False"
+            }
+          ],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-350.pdf",
+            "plmId": "PLM_ID"
+          }
+        },
+        {
+          "segmentTitle": "Fasten Harness Nut",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [
+            {
+              "inputMaterialPMlmId": "PLM_ID",
+              "materialName": "",
+              "quantity": 1,
+              "materialNumber": "200002465A",
+              "materialTitle": "",
+              "units": "each",
+              "scan": "False",
+              "parentIdentifier": "False"
+            }
+          ],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-360.pdf",
+            "plmId": "PLM_ID"
+          }
+        },
+        {
+          "segmentTitle": "Control Caddy subassy",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [
+            {
+              "inputMaterialPMlmId": "PLM_ID",
+              "materialName": "",
+              "quantity": 1,
+              "materialNumber": "200003115C",
+              "materialTitle": "",
+              "units": "each",
+              "scan": "False",
+              "parentIdentifier": "False"
+            }
+          ],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-370.pdf",
+            "plmId": "PLM_ID"
+          }
+        },
+        {
+          "segmentTitle": "Control Caddy Foam",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [
+            {
+              "inputMaterialPMlmId": "PLM_ID",
+              "materialName": "",
+              "quantity": 1,
+              "materialNumber": "200005622B",
+              "materialTitle": "",
+              "units": "each",
+              "scan": "False",
+              "parentIdentifier": "False"
+            }
+          ],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-380.pdf",
+            "plmId": "PLM_ID"
+          }
+        },
+        {
+          "segmentTitle": "Install motor logic board TIM",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-390.pdf",
+            "plmId": "PLM_ID"
+          }
+        },
+        {
+          "segmentTitle": "Install Motor Logic Board",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [
+            {
+              "inputMaterialPMlmId": "PLM_ID",
+              "materialName": "",
+              "quantity": 1,
+              "materialNumber": "200002349B",
+              "materialTitle": "",
+              "units": "each",
+              "scan": "True",
+              "parentIdentifier": "False"
+            }
+          ],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-400.pdf",
+            "plmId": "PLM_ID"
+          }
+        },
+        {
+          "segmentTitle": "Prepare Clamp, Yellow Piece",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [
+            {
+              "inputMaterialPMlmId": "PLM_ID",
+              "materialName": "",
+              "quantity": 1,
+              "materialNumber": "200002239A",
+              "materialTitle": "",
+              "units": "each",
+              "scan": "False",
+              "parentIdentifier": "False"
+            }
+          ],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-410.pdf",
+            "plmId": "PLM_ID"
+          }
+        },
+        {
+          "segmentTitle": "Prepare Bearing Support, Citrine",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [
+            {
+              "inputMaterialPMlmId": "PLM_ID",
+              "materialName": "",
+              "quantity": 1,
+              "materialNumber": "200002234C",
+              "materialTitle": "",
+              "units": "each",
+              "scan": "False",
+              "parentIdentifier": "False"
+            }
+          ],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-420.pdf",
+            "plmId": "PLM_ID"
+          }
+        },
+        {
+          "segmentTitle": "Fasten Motor Logic Board subassy",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [
+            {
+              "inputMaterialPMlmId": "PLM_ID",
+              "materialName": "",
+              "quantity": 4,
+              "materialNumber": "200000209D",
+              "materialTitle": "",
+              "units": "each",
+              "scan": "False",
+              "parentIdentifier": "False"
+            }
+          ],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-430.pdf",
+            "plmId": "PLM_ID"
+          }
+        },
+        {
+          "segmentTitle": "Fasten Cross Roller Clamp",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-440.pdf",
+            "plmId": "PLM_ID"
+          }
+        },
+        {
+          "segmentTitle": "Install Turtle",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [
+            {
+              "inputMaterialPMlmId": "PLM_ID",
+              "materialName": "",
+              "quantity": 1,
+              "materialNumber": "200005216B",
+              "materialTitle": "",
+              "units": "each",
+              "scan": "False",
+              "parentIdentifier": "False"
+            }
+          ],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-450.pdf",
+            "plmId": "PLM_ID"
+          }
+        },
+        {
+          "segmentTitle": "Fasten Turtle",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [
+            {
+              "inputMaterialPMlmId": "PLM_ID",
+              "materialName": "",
+              "quantity": 3,
+              "materialNumber": "200000209D",
+              "materialTitle": "",
+              "units": "each",
+              "scan": "False",
+              "parentIdentifier": "False"
+            }
+          ],
+          "sampleDefinitions": [
+            {
+              "instructions": "Next?",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Confirm",
+              "sampleQty": 1,
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "STRING",
+                  "Format": "#0.00",
+                  "Order": "1",
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "pdfLink": "CITRINE J2L/CITRINE-460.pdf",
+            "plmId": "PLM_ID"
+          }
+        }
+      ]
+    },
+    {
+      "operationTitle": "Citrine J2 Left EOL Test Station 60",
+      "operationName": "",
+      "operationPlmId": "",
+      "workstationName": "S060",
+      "operationSegments": [
+        {
+          "segmentTitle": "EOL Testing",
+          "segmentName": "",
+          "segmentPlmId": "",
+          "segmentSequence": 0,
+          "operationInputMaterials": [],
+          "sampleDefinitions": [
+            {
+              "instructions": "Place the part on the tester device",
+              "sampleDefinitionName": "",
+              "plmId": "PLM_ID",
+              "sampleClass": "Actuator EOL Tester",
+              "toolResourceInstance": "Actuator_Tester_1",
+              "sampleQty": 3,
+              "settings": {
+                "Configuration N/L/R": "N"
+              },
+              "attributes": {
+                "PassFail": {
+                  "DataType": "BOOLEAN",
+                  "Required": "True",
+                  "Description": "Pass or fail result",
+                  "Format": "",
+                  "Order": 1,
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                },
+                "TestRevision": {
+                  "DataType": "STRING",
+                  "Required": "True",
+                  "Description": "Revision code",
+                  "Format": "DW",
+                  "Order": 2,
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                },
+                "TestCount": {
+                  "DataType": "INTEGER",
+                  "Required": "True",
+                  "Description": "Number of test repetitions",
+                  "Format": "",
+                  "Order": 3,
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                },
+                "TestTimestamp": {
+                  "DataType": "STRING",
+                  "Required": "True",
+                  "Description": "Time of test",
+                  "Format": "",
+                  "Order": 4,
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                },
+                "TestDuration": {
+                  "DataType": "INTEGER",
+                  "Required": "True",
+                  "Description": "Duration of test (in s)",
+                  "Format": "",
+                  "Order": 5,
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                },
+                "RejectCode": {
+                  "DataType": "STRING",
+                  "Required": "True",
+                  "Description": "Code for rejection reason",
+                  "Format": "",
+                  "Order": 6,
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                },
+                "RejectReason": {
+                  "DataType": "STRING",
+                  "Required": "True",
+                  "Description": "Description of rejection reason",
+                  "Format": "DW",
+                  "Order": 7,
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                },
+                "URLString": {
+                  "DataType": "STRING",
+                  "Required": "True",
+                  "Description": "Link to related documentation",
+                  "Format": "DW",
+                  "Order": 8,
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                },
+                "OperatorDetails": {
+                  "DataType": "STRING",
+                  "Required": "True",
+                  "Description": "Name or ID of operator",
+                  "Format": "DW",
+                  "Order": 9,
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                },
+                "TestType": {
+                  "DataType": "STRING",
+                  "Required": "True",
+                  "Description": "Type of test performed",
+                  "Format": "DW",
+                  "Order": 10,
+                  "MinimumValue": "",
+                  "MaximumValue": ""
+                }
+              }
+            }
+          ],
+          "workInstruction": {
+            "plmId": "PLM_ID",
+            "pdfLink": ""
+          }
+        }
+      ]
+    }
+  ]
+}

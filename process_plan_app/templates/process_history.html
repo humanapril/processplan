@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Process Plan History</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        background-color: #0b0b0b;
+        color: #ccc;
+        padding: 20px;
+      }
+
+      h2 {
+        color: #797af2;
+        margin-bottom: 20px;
+      }
+
+      input[type="text"] {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 20px;
+        background-color: #1a1a1a;
+        border: 1px solid #444;
+        color: #ccc;
+        border-radius: 5px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        padding: 10px;
+        border: 1px solid #333;
+        text-align: left;
+      }
+
+      th {
+        background-color: #1a1a1a;
+        color: #797af2;
+        cursor: pointer;
+      }
+
+      a {
+        color: #797af2;
+        text-decoration: none;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+
+      .back-link {
+        display: inline-block;
+        margin-bottom: 20px;
+        color: #797af2;
+        text-decoration: none;
+      }
+
+      .back-link:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <a class="back-link" href="{{ url_for('index') }}"
+      >&larr; Back to Main Page</a
+    >
+
+    <h2>Process Plan Upload History</h2>
+
+    <input
+      type="text"
+      id="searchInput"
+      placeholder="Filter by user email or filename..."
+    />
+
+    <table id="historyTable">
+      <thead>
+        <tr>
+          <th onclick="sortTable(0)">User</th>
+          <th onclick="sortTable(1)">File</th>
+          <th onclick="sortTable(2)">Uploaded</th>
+          <th onclick="sortTable(3)">Status</th>
+          <th>Download</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in history %}
+        <tr>
+          <td>{{ row.user_email }}</td>
+          <td>{{ row.uploaded_filename }}</td>
+          <td>{{ row.upload_time.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+          <td>{{ row.status_code }}</td>
+          <td>
+            <a href="{{ url_for('download_json_blob', history_id=row.id) }}"
+              >Download</a
+            >
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <script>
+      // Filter rows
+      document
+        .getElementById("searchInput")
+        .addEventListener("keyup", function () {
+          const filter = this.value.toLowerCase();
+          const rows = document.querySelectorAll("#historyTable tbody tr");
+          rows.forEach((row) => {
+            const text = row.innerText.toLowerCase();
+            row.style.display = text.includes(filter) ? "" : "none";
+          });
+        });
+
+      // Sort table
+      function sortTable(colIndex) {
+        const table = document.getElementById("historyTable");
+        const rows = Array.from(table.rows).slice(1);
+        const isAsc = table.getAttribute("data-sort-dir") !== "asc";
+        table.setAttribute("data-sort-dir", isAsc ? "asc" : "desc");
+
+        rows.sort((a, b) => {
+          const cellA = a.cells[colIndex].innerText;
+          const cellB = b.cells[colIndex].innerText;
+          return isAsc
+            ? cellA.localeCompare(cellB)
+            : cellB.localeCompare(cellA);
+        });
+
+        const tbody = table.querySelector("tbody");
+        tbody.innerHTML = "";
+        rows.forEach((row) => tbody.appendChild(row));
+      }
+    </script>
+  </body>
+</html>

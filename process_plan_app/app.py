@@ -11,7 +11,8 @@ from PyPDF2 import PdfReader, PdfWriter
 from werkzeug.utils import secure_filename
 import requests
 from requests.auth import HTTPBasicAuth
-
+from datetime import datetime
+import io
 # === App Setup ===
 app = Flask(__name__, template_folder="templates", static_folder="static")
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgres@localhost/process_plan_db'
@@ -193,7 +194,10 @@ def import_single_json():
         return jsonify({"error": "Invalid file type."}), 400
 
     try:
-        data = json.load(file)
+        raw_data = file.read()
+        data = json.loads(raw_data.decode('utf-8'))  # For POST to MES
+
+        # Post to MES
         response = requests.post(
             "https://mes.dev.figure.ai:60088/system/webdev/BotQ-MES/Operations/OperationsRouteManual",
             json=data,
@@ -201,17 +205,31 @@ def import_single_json():
             headers={"Content-Type": "application/json"},
             timeout=120
         )
+
+        # Save to DB
+        history = ProcessPlanHistory(
+            user_email=current_user.email,
+            uploaded_filename=file.filename,
+            status_code=str(response.status_code),
+            response_summary=response.text[:1000],
+            json_blob=raw_data  # Save raw bytes
+        )
+        db.session.add(history)
+        db.session.commit()
+
         return jsonify({
             "filename": file.filename,
             "status_code": response.status_code,
             "response": response.text[:1000]
         })
+
     except Exception as e:
         return jsonify({
             "filename": file.filename,
             "status_code": "Error",
             "response": str(e)
         })
+
 
 def process_excel_sheets_to_jsons(excel_file_path, output_dir):
     xl = pd.ExcelFile(excel_file_path)
@@ -379,15 +397,53 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
 
                 metadata["operationsDefinitions"].append(operation)
 
-            json_path = os.path.join(output_dir, f"{sheet_name}.json")
-            with open(json_path, "w", encoding="utf-8") as f:
-                json.dump(convert_bools(metadata), f, indent=4)
-            generated_files.append(json_path)
 
         except Exception as e:
             print(f"⚠️ Error processing sheet '{sheet_name}': {e}")
 
     return generated_files
+
+# === Added Route history === #
+@app.route('/history')
+@login_required
+def process_history():
+    history = ProcessPlanHistory.query.order_by(ProcessPlanHistory.upload_time.desc()).all()
+    return render_template('process_history.html', history=history)
+
+
+
+# ===  Create a route to download JSON from DB as a file === #
+@app.route('/download_json/<int:history_id>')
+@login_required
+def download_json_blob(history_id):  # ✅ name changed
+    record = ProcessPlanHistory.query.get_or_404(history_id)
+
+    if not record.json_blob:
+        return "No JSON blob stored for this record.", 404
+
+    return send_file(
+        io.BytesIO(record.json_blob),
+        mimetype='application/json',
+        as_attachment=True,
+        download_name=record.uploaded_filename
+    )
+
+
+
+# === Create New Model for History Logs === #
+
+class ProcessPlanHistory(db.Model):
+    __tablename__ = 'process_plan_history'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_email = db.Column(db.String(255), nullable=False)
+    uploaded_filename = db.Column(db.String(255), nullable=False)
+    upload_time = db.Column(db.DateTime, default=db.func.now())
+    status_code = db.Column(db.String(20))
+    response_summary = db.Column(db.Text)
+    json_blob = db.Column(db.LargeBinary)  # <-- added
+
+
     
 # === Run the App ===
 if __name__ == '__main__':
