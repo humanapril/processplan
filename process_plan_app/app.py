@@ -200,18 +200,22 @@ def index():
 
 
 # === JSON Import Route ===
+
+
 @app.route('/import', methods=['POST'])
 @login_required
 def import_single_json():
     file = request.files.get('json_file')
     if not file or not file.filename.endswith('.json'):
+        print("❌ Invalid file uploaded or missing")
         return jsonify({"error": "Invalid file type."}), 400
 
     try:
         raw_data = file.read()
-        data = json.loads(raw_data.decode('utf-8'))  # For POST to MES
+        data = json.loads(raw_data.decode('utf-8'))
+        print("📤 Posting to MES with payload:")
+        print(json.dumps(data, indent=2)[:1000])  # Log first 1000 chars for safety
 
-        # Post to MES
         response = requests.post(
             "https://mes.dev.figure.ai:60088/system/webdev/BotQ-MES/Operations/OperationsRouteManual",
             json=data,
@@ -220,13 +224,16 @@ def import_single_json():
             timeout=120
         )
 
+        print(f"✅ MES Response: {response.status_code}")
+        print(response.text[:1000])  # Only first 1000 chars
+
         # Save to DB
         history = ProcessPlanHistory(
             user_email=current_user.email,
             uploaded_filename=file.filename,
             status_code=str(response.status_code),
             response_summary=response.text[:1000],
-            json_blob=raw_data  # Save raw bytes
+            json_blob=raw_data
         )
         db.session.add(history)
         db.session.commit()
@@ -238,12 +245,14 @@ def import_single_json():
         })
 
     except Exception as e:
+        print("❌ Exception occurred during /import:")
+        import traceback
+        traceback.print_exc()  # Logs full stack trace
         return jsonify({
-            "filename": file.filename,
+            "filename": file.filename if file else "N/A",
             "status_code": "Error",
             "response": str(e)
         })
-
 
 def process_excel_sheets_to_jsons(excel_file_path, output_dir):
     xl = pd.ExcelFile(excel_file_path)
