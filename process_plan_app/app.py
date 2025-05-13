@@ -1,4 +1,7 @@
-from flask import Flask, render_template, request, send_file, jsonify
+from flask import Flask, render_template, request, send_file, jsonify, redirect, url_for
+from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user, UserMixin
+from flask_bcrypt import Bcrypt
 import pandas as pd
 import json
 import os
@@ -9,13 +12,39 @@ from werkzeug.utils import secure_filename
 import requests
 from requests.auth import HTTPBasicAuth
 
+# === App Setup ===
 app = Flask(__name__, template_folder="templates", static_folder="static")
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgres@localhost/process_plan_db'
+app.config['SECRET_KEY'] = 'supersecretkey'
+db = SQLAlchemy(app)
+bcrypt = Bcrypt(app)
+login_manager = LoginManager(app)
+login_manager.login_view = 'login'
 
 MATERIAL_LIST = [
     "SAPPHIRE", "LAPIS", "JADE", "CARROT",
     "CITRINE", "PAPAYA", "FINGER"
 ]
 
+# === User Model ===
+class User(db.Model, UserMixin):
+    __tablename__ = 'users'
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(255), unique=True, nullable=False)
+    password_hash = db.Column(db.Text, nullable=False)
+    first_name = db.Column(db.String(100))
+    last_name = db.Column(db.String(100))
+    role = db.Column(db.String(10), default='pending')  # 'admin', 'user', 'pending'
+    is_approved = db.Column(db.Boolean, default=False)
+
+    def check_password(self, password):
+        return bcrypt.check_password_hash(self.password_hash, password)
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+# === Utility Functions ===
 def convert_bools(obj):
     if isinstance(obj, dict):
         return {k: convert_bools(v) for k, v in obj.items()}
@@ -24,6 +53,165 @@ def convert_bools(obj):
     elif isinstance(obj, bool):
         return "True" if obj else "False"
     return obj
+
+# === Registration ===
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        email = request.form['email']
+        password = request.form['password']
+        first_name = request.form['first_name']
+        last_name = request.form['last_name']
+
+        if User.query.filter_by(email=email).first():
+            return "Email already exists.", 400
+
+        hashed_pw = bcrypt.generate_password_hash(password).decode('utf-8')
+
+        new_user = User(
+            email=email,
+            password_hash=hashed_pw,
+            first_name=first_name,
+            last_name=last_name,
+            role='pending',
+            is_approved=False
+        )
+
+        db.session.add(new_user)
+        db.session.commit()
+
+        return "Account request submitted. Await admin approval."
+
+    return render_template('register.html')
+
+# === Login ===
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        user = User.query.filter_by(email=request.form['email']).first()
+        if user and user.check_password(request.form['password']):
+            if not user.is_approved:
+                return "Account pending approval.", 403
+            login_user(user)
+            return redirect('/')
+        return "Invalid credentials.", 403
+    return render_template('login.html')
+
+# === Logout ===
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect('/login')
+
+# === Admin: Approve Users ===
+@app.route('/admin/approve', methods=['GET', 'POST'])
+@login_required
+def admin_approve():
+    if current_user.role != 'admin':
+        return "Unauthorized", 403
+    if request.method == 'POST':
+        user_id = request.form['user_id']
+        user = User.query.get(user_id)
+        if user:
+            user.is_approved = True
+            user.role = 'user'
+            db.session.commit()
+    pending_users = User.query.filter_by(is_approved=False).all()
+    return render_template('approve_users.html', users=pending_users)
+
+# === Home / Index ===
+@app.route('/', methods=['GET', 'POST'])
+@login_required
+def index():
+    if request.method == 'POST':
+        form_type = request.form.get('form_type')
+
+        if form_type == 'json':
+            file = request.files.get('file')
+            material = request.form.get('material')
+
+            if not file or not file.filename.endswith('.xlsx'):
+                return "Please upload a valid .xlsx file.", 400
+
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as temp_input:
+                file.save(temp_input.name)
+                with tempfile.TemporaryDirectory() as temp_output_dir:
+                    json_files = process_excel_sheets_to_jsons(temp_input.name, temp_output_dir)
+                    if not json_files:
+                        return "No valid sheets found in the Excel file.", 400
+
+                    zip_path = os.path.join(temp_output_dir, f"{material}_jsons.zip")
+                    with zipfile.ZipFile(zip_path, 'w') as zipf:
+                        for jf in json_files:
+                            zipf.write(jf, os.path.basename(jf))
+                    return send_file(zip_path, as_attachment=True, download_name=f"{material}_jsons.zip")
+
+        elif form_type == 'pdf':
+            uploaded_files = request.files.getlist('pdf_files')
+            with tempfile.TemporaryDirectory() as temp_output_dir:
+                for file in uploaded_files:
+                    if file and file.filename.lower().endswith(".pdf"):
+                        filename = secure_filename(file.filename)
+                        base_name = os.path.splitext(filename)[0]
+                        pdf_path = os.path.join(temp_output_dir, filename)
+                        file.save(pdf_path)
+
+                        subfolder = os.path.join(temp_output_dir, base_name)
+                        os.makedirs(subfolder, exist_ok=True)
+
+                        reader = PdfReader(pdf_path)
+                        for i in range(1, len(reader.pages)):
+                            writer = PdfWriter()
+                            writer.add_page(reader.pages[i])
+                            output_name = f"{base_name}-{(i)*10:03}.pdf"
+                            output_path = os.path.join(subfolder, output_name)
+                            with open(output_path, "wb") as f_out:
+                                writer.write(f_out)
+
+                zip_path = os.path.join(temp_output_dir, "split_pdfs.zip")
+                with zipfile.ZipFile(zip_path, 'w') as zipf:
+                    for root, _, files in os.walk(temp_output_dir):
+                        for file in files:
+                            full_path = os.path.join(root, file)
+                            if full_path != zip_path:
+                                arcname = os.path.relpath(full_path, temp_output_dir)
+                                zipf.write(full_path, arcname)
+
+                return send_file(zip_path, as_attachment=True, download_name="split_pdfs.zip")
+
+    # Pass current_user into the template to show admin options if needed
+    return render_template("index.html", materials=MATERIAL_LIST, current_user=current_user)
+
+
+# === JSON Import Route ===
+@app.route('/import', methods=['POST'])
+@login_required
+def import_single_json():
+    file = request.files.get('json_file')
+    if not file or not file.filename.endswith('.json'):
+        return jsonify({"error": "Invalid file type."}), 400
+
+    try:
+        data = json.load(file)
+        response = requests.post(
+            "https://mes.dev.figure.ai:60088/system/webdev/BotQ-MES/Operations/OperationsRouteManual",
+            json=data,
+            auth=HTTPBasicAuth('figure', 'figure'),
+            headers={"Content-Type": "application/json"},
+            timeout=120
+        )
+        return jsonify({
+            "filename": file.filename,
+            "status_code": response.status_code,
+            "response": response.text[:1000]
+        })
+    except Exception as e:
+        return jsonify({
+            "filename": file.filename,
+            "status_code": "Error",
+            "response": str(e)
+        })
 
 def process_excel_sheets_to_jsons(excel_file_path, output_dir):
     xl = pd.ExcelFile(excel_file_path)
@@ -200,94 +388,7 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
             print(f"⚠️ Error processing sheet '{sheet_name}': {e}")
 
     return generated_files
-
-@app.route('/', methods=['GET', 'POST'])
-def index():
-    if request.method == 'POST':
-        form_type = request.form.get('form_type')
-
-        if form_type == 'json':
-            file = request.files.get('file')
-            material = request.form.get('material')
-
-            if not file or not file.filename.endswith('.xlsx'):
-                return "Please upload a valid .xlsx file.", 400
-
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as temp_input:
-                file.save(temp_input.name)
-                with tempfile.TemporaryDirectory() as temp_output_dir:
-                    json_files = process_excel_sheets_to_jsons(temp_input.name, temp_output_dir)
-                    if not json_files:
-                        return "No valid sheets found in the Excel file.", 400
-
-                    zip_path = os.path.join(temp_output_dir, f"{material}_jsons.zip")
-                    with zipfile.ZipFile(zip_path, 'w') as zipf:
-                        for jf in json_files:
-                            zipf.write(jf, os.path.basename(jf))
-                    return send_file(zip_path, as_attachment=True, download_name=f"{material}_jsons.zip")
-
-        elif form_type == 'pdf':
-            uploaded_files = request.files.getlist('pdf_files')
-
-            with tempfile.TemporaryDirectory() as temp_output_dir:
-                for file in uploaded_files:
-                    if file and file.filename.lower().endswith(".pdf"):
-                        filename = secure_filename(file.filename)
-                        base_name = os.path.splitext(filename)[0]
-                        pdf_path = os.path.join(temp_output_dir, filename)
-                        file.save(pdf_path)
-
-                        subfolder = os.path.join(temp_output_dir, base_name)
-                        os.makedirs(subfolder, exist_ok=True)
-
-                        reader = PdfReader(pdf_path)
-                        for i in range(1, len(reader.pages)):
-                            writer = PdfWriter()
-                            writer.add_page(reader.pages[i])
-                            output_name = f"{base_name}-{(i)*10:03}.pdf"
-                            output_path = os.path.join(subfolder, output_name)
-                            with open(output_path, "wb") as f_out:
-                                writer.write(f_out)
-
-                zip_path = os.path.join(temp_output_dir, "split_pdfs.zip")
-                with zipfile.ZipFile(zip_path, 'w') as zipf:
-                    for root, _, files in os.walk(temp_output_dir):
-                        for file in files:
-                            full_path = os.path.join(root, file)
-                            if full_path != zip_path:
-                                arcname = os.path.relpath(full_path, temp_output_dir)
-                                zipf.write(full_path, arcname)
-
-                return send_file(zip_path, as_attachment=True, download_name="split_pdfs.zip")
-
-    return render_template("index.html", materials=MATERIAL_LIST)
-
-@app.route('/import', methods=['POST'])
-def import_single_json():
-    file = request.files.get('json_file')
-    if not file or not file.filename.endswith('.json'):
-        return jsonify({"error": "Invalid file type."}), 400
-
-    try:
-        data = json.load(file)
-        response = requests.post(
-            "https://mes.dev.figure.ai:60088/system/webdev/BotQ-MES/Operations/OperationsRouteManual",
-            json=data,
-            auth=HTTPBasicAuth('figure', 'figure'),
-            headers={"Content-Type": "application/json"},
-            timeout=120
-        )
-        return jsonify({
-            "filename": file.filename,
-            "status_code": response.status_code,
-            "response": response.text[:1000]
-        })
-    except Exception as e:
-        return jsonify({
-            "filename": file.filename,
-            "status_code": "Error",
-            "response": str(e)
-        })
-
+    
+# === Run the App ===
 if __name__ == '__main__':
     app.run(debug=True)

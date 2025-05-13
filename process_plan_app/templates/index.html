@@ -121,6 +121,65 @@
         />
       </div>
 
+      <div
+        style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 20px;
+          font-size: 0.95rem;
+          flex-wrap: wrap;
+        "
+      >
+        {% if current_user.is_authenticated %}
+        <div style="color: #9f9f9f">
+          Logged in as:<br />
+          <strong>{{ current_user.email }}</strong><br />
+          <strong>{{ current_user.role|capitalize }}</strong>
+        </div>
+
+        <div style="margin-top: 10px">
+          <a
+            href="{{ url_for('logout') }}"
+            style="color: #797af2; margin-right: 10px; text-decoration: none"
+          >
+            Logout
+          </a>
+
+          {% if current_user.role == 'admin' %}
+          <a href="{{ url_for('admin_approve') }}">
+            <button
+              style="
+                background: #2f2f2f;
+                color: #9f9f9f;
+                padding: 6px 12px;
+                border: 1px solid #444;
+                border-radius: 6px;
+              "
+            >
+              Admin Panel
+            </button>
+          </a>
+          {% endif %}
+        </div>
+        {% else %}
+        <div style="margin-left: auto">
+          <a
+            href="{{ url_for('login') }}"
+            style="color: #797af2; text-decoration: none; margin-right: 10px"
+          >
+            Login
+          </a>
+          <a
+            href="{{ url_for('register') }}"
+            style="color: #797af2; text-decoration: none"
+          >
+            Register
+          </a>
+        </div>
+        {% endif %}
+      </div>
+
       <div class="tabs">
         <div class="tab active" onclick="switchTab('jsonForm')">
           JSON Generator
