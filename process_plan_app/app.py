@@ -4,6 +4,7 @@ from flask_login import LoginManager, login_user, logout_user, login_required, c
 from flask_bcrypt import Bcrypt
 import pandas as pd
 import json
+from flask_cors import CORS
 import os
 import tempfile
 import zipfile
@@ -14,9 +15,11 @@ from requests.auth import HTTPBasicAuth
 from datetime import datetime
 import io
 from dotenv import load_dotenv
+from zoneinfo import ZoneInfo
 load_dotenv()
 # === App Setup ===
 app = Flask(__name__, template_folder="templates", static_folder="static")
+CORS(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}"
 app.config['SECRET_KEY'] = 'supersecretkey'
 db = SQLAlchemy(app)
@@ -28,6 +31,15 @@ MATERIAL_LIST = [
     "SAPPHIRE", "LAPIS", "JADE", "CARROT",
     "CITRINE", "PAPAYA", "FINGER"
 ]
+
+
+
+@app.template_filter('localtime')
+def localtime_filter(utc_dt):
+    if not utc_dt:
+        return ""
+    local_dt = utc_dt.replace(tzinfo=ZoneInfo("UTC")).astimezone(ZoneInfo("America/Los_Angeles"))  # or your local TZ
+    return local_dt.strftime('%Y-%m-%d %H:%M:%S')
 
 # === User Model ===
 class User(db.Model, UserMixin):

@@ -93,7 +93,7 @@
         <tr>
           <td>{{ row.user_email }}</td>
           <td>{{ row.uploaded_filename }}</td>
-          <td>{{ row.upload_time.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+          <td>{{ row.upload_time|localtime }}</td>
           <td>{{ row.status_code }}</td>
           <td>
             <a href="{{ url_for('download_json_blob', history_id=row.id) }}"
