@@ -13,9 +13,11 @@ import requests
 from requests.auth import HTTPBasicAuth
 from datetime import datetime
 import io
+from dotenv import load_dotenv
+load_dotenv()
 # === App Setup ===
 app = Flask(__name__, template_folder="templates", static_folder="static")
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:postgres@localhost/process_plan_db'
+app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}"
 app.config['SECRET_KEY'] = 'supersecretkey'
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
@@ -396,6 +398,10 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
                         operation["operationSegments"].append(segment)
 
                 metadata["operationsDefinitions"].append(operation)
+		output_path = os.path.join(output_dir, f"{sheet_name.strip()}.json")
+		with open(output_path, "w", encoding="utf-8") as f:
+    			json.dump(convert_bools(metadata), f, indent=2)
+		generated_files.append(output_path)
 
 
         except Exception as e:
