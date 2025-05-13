@@ -1,4 +1,37 @@
-###create user table
+# 📦 Process Plan History App
+
+A Flask-based web application for converting, uploading, storing, and reviewing process plan JSON files. 
+It includes user authentication, admin approval, and a history log of uploaded plans.
+
+---
+
+## 🚀 Features
+
+- User registration and login with hashed passwords
+- Admin approval system for new users
+- Upload .xlsx process plans to auto convert to JSON process plans
+- Upload JSON process plans and store metadata
+- View upload history in a searchable, sortable table
+- PostgreSQL backend
+- Easily deployable on a remote server with Gunicorn + Nginx
+
+---
+
+## 🛠️ Tech Stack
+
+- **Backend:** Python 3.10+, Flask, SQLAlchemy
+- **Frontend:** HTML, CSS, JavaScript (or Flask templates)
+- **Database:** PostgreSQL
+- **Deployment:** Gunicorn + Nginx (recommended), or Flask dev server
+
+---
+
+## 📂 Project Structure
+
+
+For PostgresDB
+
+###Create users Table
 
 CREATE TABLE public.users (
     id SERIAL PRIMARY KEY,
@@ -12,13 +45,13 @@ CREATE TABLE public.users (
 );
 
 
-#### update users request 
+#### Approve and Promote a User
 UPDATE public.users
-	SET role='admin', is_approved=true
-	WHERE first_name = 'April';
+SET role = 'admin', is_approved = true
+WHERE first_name = 'April';
 
-####Create table for process plan 
 
+#### Create process_plan_history Table
 CREATE TABLE process_plan_history (
     id SERIAL PRIMARY KEY,
     user_email VARCHAR(255) NOT NULL,
