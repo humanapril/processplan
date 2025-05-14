@@ -311,13 +311,13 @@
 
         const messagePara = document.querySelector("#progressContainer p");
         progressBar.value = stepProgress;
-        messagePara.textContent = `Step ${currentStep} of ${steps} completed...`;
+        messagePara.innerHTML = `Step ${currentStep} of ${steps} completed.<br><small style="color:#999;">(This could take up to 3 min to create object and data models in MES. Please be patient.)</small>`;
 
         const intervalId = setInterval(() => {
           currentStep++;
           if (currentStep <= steps) {
             progressBar.value = currentStep * stepProgress;
-            messagePara.textContent = `Step ${currentStep} of ${steps} completed...`;
+            messagePara.innerHTML = `Step ${currentStep} of ${steps} completed.<br><small style="color:#999;">(This could take up to 3 min to create object and data models in MES. Please be patient.)</small>`;
           }
         }, stepInterval);
 

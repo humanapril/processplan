@@ -20,6 +20,8 @@ load_dotenv()
 # === App Setup ===
 app = Flask(__name__, template_folder="templates", static_folder="static")
 CORS(app)
+
+app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100 MB
 app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}"
 app.config['SECRET_KEY'] = 'supersecretkey'
 db = SQLAlchemy(app)
@@ -100,16 +102,22 @@ def register():
     return render_template('register.html')
 
 # === Login ===
+from flask import flash
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         user = User.query.filter_by(email=request.form['email']).first()
         if user and user.check_password(request.form['password']):
             if not user.is_approved:
-                return "Account pending approval.", 403
+                flash("Account pending approval.", "error")
+                return redirect(url_for('login'))
             login_user(user)
-            return redirect('/')
-        return "Invalid credentials.", 403
+            return redirect(url_for('index'))
+
+        flash("Invalid credentials.", "error")  # 👈 Flash message for login failure
+        return redirect(url_for('login'))       # 👈 Redirect back to login form
+
     return render_template('login.html')
 
 # === Logout ===
@@ -120,20 +128,30 @@ def logout():
     return redirect('/login')
 
 # === Admin: Approve Users ===
+
 @app.route('/admin/approve', methods=['GET', 'POST'])
 @login_required
 def admin_approve():
     if current_user.role != 'admin':
         return "Unauthorized", 403
+
     if request.method == 'POST':
         user_id = request.form['user_id']
+        action = request.form['action']
+
         user = User.query.get(user_id)
         if user:
-            user.is_approved = True
-            user.role = 'user'
-            db.session.commit()
+            if action == 'approve':
+                user.is_approved = True
+                user.role = 'user'
+                db.session.commit()
+            elif action == 'deny':
+                db.session.delete(user)
+                db.session.commit()
+
     pending_users = User.query.filter_by(is_approved=False).all()
     return render_template('approve_users.html', users=pending_users)
+
 
 # === Home / Index ===
 @app.route('/', methods=['GET', 'POST'])
