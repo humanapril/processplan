@@ -37,7 +37,10 @@ def handle_unauthorized():
 
 MATERIAL_LIST = [
     "SAPPHIRE", "LAPIS", "JADE", "CARROT",
-    "CITRINE", "PAPAYA", "FINGER"
+    "CITRINE", "PAPAYA", "FINGER", "HAND",
+    "ARM", "UPPER LEG", "SHIN", "NECK", "WRIST",
+    "FOOT", "PELVIS", "COMPUTE", "TORSO", "FINAL",
+    "EOL", "BATTERY CELLS", "BATTERY MODULE", "BATTERY PACK" 
 ]
 
 
