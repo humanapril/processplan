@@ -55,7 +55,7 @@
 
       input[type="file"],
       select {
-        width: 100%;
+        width: 68%;
         padding: 12px;
         margin-top: 10px;
         background-color: #151515;
@@ -115,7 +115,7 @@
   <body>
     <div class="container">
       <div class="header">
-        <h2>Figure AI | Process Tools</h2>
+        <h2>Figure MES Toolkit | Process Plan & Work Instruction Builder</h2>
         <img
           src="{{ url_for('static', filename='images/logo.jpg') }}"
           class="logo"
@@ -197,7 +197,7 @@
         enctype="multipart/form-data"
       >
         <input type="hidden" name="form_type" value="json" />
-        <label for="material">Select Material:</label>
+        <label for="material">Select Manufacturing Process:</label>
         <select name="material" id="material" required>
           {% for material in materials %}
           <option value="{{ material }}">{{ material }}</option>
@@ -216,7 +216,7 @@
         enctype="multipart/form-data"
       >
         <input type="hidden" name="form_type" value="pdf" />
-        <label for="pdf_files">Upload PDF(s) to Split:</label>
+        <label for="pdf_files">Upload Work Instruction PDF File to Split:</label>
         <input
           type="file"
           name="pdf_files"
@@ -235,7 +235,7 @@
         enctype="multipart/form-data"
         onsubmit="handleImportSubmit(event)"
       >
-        <label for="json_file">Upload JSON File:</label>
+        <label for="json_file">Upload Process Plan File (.json):</label>
         <input
           type="file"
           name="json_file"
@@ -311,13 +311,13 @@
 
         const messagePara = document.querySelector("#progressContainer p");
         progressBar.value = stepProgress;
-        messagePara.innerHTML = `Step ${currentStep} of ${steps} completed.<br><small style="color:#999;">(This could take up to 3 min to create object and data models in MES. Please be patient.)</small>`;
+        messagePara.innerHTML = `Step ${currentStep} of ${steps} completed...<br><small style="color:#999;">(This could take up to 3 min to create object and data models in MES. Please be patient.)</small>`;
 
         const intervalId = setInterval(() => {
           currentStep++;
           if (currentStep <= steps) {
             progressBar.value = currentStep * stepProgress;
-            messagePara.innerHTML = `Step ${currentStep} of ${steps} completed.<br><small style="color:#999;">(This could take up to 3 min to create object and data models in MES. Please be patient.)</small>`;
+            messagePara.innerHTML = `Step ${currentStep} of ${steps} completed...<br><small style="color:#999;">(This could take up to 3 min to create object and data models in MES. Please be patient.)</small>`;
           }
         }, stepInterval);
 

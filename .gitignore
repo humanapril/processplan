@@ -3,6 +3,7 @@ ProcessPlan_json/**
 ProcessPlan_xlsx/**
 WorkInstructions/**
 **/.DS_Store
+__pycache__/
 # But not this specific file
 #!folder-name/keep-this-file.txt
 
