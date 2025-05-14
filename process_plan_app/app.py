@@ -27,8 +27,13 @@ app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://{os.getenv('DB_USER')}:{o
 app.config['SECRET_KEY'] = 'supersecretkey'
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
+
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
+
+@login_manager.unauthorized_handler
+def handle_unauthorized():
+    return redirect(url_for('login'))
 
 MATERIAL_LIST = [
     "SAPPHIRE", "LAPIS", "JADE", "CARROT",
