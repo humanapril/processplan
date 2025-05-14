@@ -27,6 +27,7 @@
         border-radius: 15px;
         border: 1px solid #333;
         width: 400px;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
       }
 
       h2 {
@@ -85,24 +86,29 @@
       .note a:hover {
         text-decoration: underline;
       }
+
+      .alert {
+        background-color: #4a1f1f;
+        border: 1px solid #a94442;
+        color: #f2c2c2;
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 20px;
+        font-size: 0.95rem;
+      }
     </style>
   </head>
-
-
-
-<body>
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      <ul style="color: red; padding: 10px;">
-        {% for category, message in messages %}
-          <li>{{ message }}</li>
-        {% endfor %}
-      </ul>
-    {% endif %}
-  {% endwith %}
-
+  <body>
     <div class="login-container">
       <h2>Login</h2>
+
+      {% with messages = get_flashed_messages(with_categories=true) %} {% if
+      messages %}
+      <div class="alert">
+        {% for category, message in messages %} {{ message }} {% endfor %}
+      </div>
+      {% endif %} {% endwith %}
+
       <form method="POST">
         <label for="email">Email</label>
         <input type="email" name="email" id="email" required />
@@ -112,6 +118,7 @@
 
         <button type="submit">Login</button>
       </form>
+
       <div class="note">
         Don’t have an account?
         <a href="{{ url_for('register') }}">Request Access</a>

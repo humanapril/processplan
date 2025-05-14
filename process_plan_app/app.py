@@ -16,6 +16,7 @@ from datetime import datetime
 import io
 from dotenv import load_dotenv
 from zoneinfo import ZoneInfo
+from flask import flash, redirect, url_for
 load_dotenv()
 # === App Setup ===
 app = Flask(__name__, template_folder="templates", static_folder="static")
@@ -101,24 +102,27 @@ def register():
 
     return render_template('register.html')
 
-# === Login ===
-from flask import flash
 
+# === Login ===
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        user = User.query.filter_by(email=request.form['email']).first()
-        if user and user.check_password(request.form['password']):
+        email = request.form['email']
+        password = request.form['password']
+        user = User.query.filter_by(email=email).first()
+
+        if user and user.check_password(password):
             if not user.is_approved:
-                flash("Account pending approval.", "error")
+                flash("Account is pending admin approval.", "error")
                 return redirect(url_for('login'))
             login_user(user)
             return redirect(url_for('index'))
-
-        flash("Invalid credentials.", "error")  # 👈 Flash message for login failure
-        return redirect(url_for('login'))       # 👈 Redirect back to login form
+        else:
+            flash("Invalid email or password.", "error")
+            return redirect(url_for('login'))
 
     return render_template('login.html')
+
 
 # === Logout ===
 @app.route('/logout')
@@ -127,27 +131,34 @@ def logout():
     logout_user()
     return redirect('/login')
 
-# === Admin: Approve Users ===
-
+# === Admin: Approve or Deny Users ===
 @app.route('/admin/approve', methods=['GET', 'POST'])
 @login_required
 def admin_approve():
     if current_user.role != 'admin':
-        return "Unauthorized", 403
+        flash("Access denied. Admins only.", "error")
+        return redirect(url_for('index'))
 
     if request.method == 'POST':
-        user_id = request.form['user_id']
-        action = request.form['action']
-
+        action = request.form.get('action')
+        user_id = request.form.get('user_id')
         user = User.query.get(user_id)
-        if user:
-            if action == 'approve':
-                user.is_approved = True
-                user.role = 'user'
-                db.session.commit()
-            elif action == 'deny':
-                db.session.delete(user)
-                db.session.commit()
+
+        if not user:
+            flash("User not found.", "error")
+        elif action == 'approve':
+            user.is_approved = True
+            user.role = 'user'
+            db.session.commit()
+            flash(f"Approved {user.email}.", "success")
+        elif action == 'deny':
+            db.session.delete(user)
+            db.session.commit()
+            flash(f"Denied and removed {user.email}.", "warning")
+        else:
+            flash("Invalid action.", "error")
+
+        return redirect(url_for('admin_approve'))
 
     pending_users = User.query.filter_by(is_approved=False).all()
     return render_template('approve_users.html', users=pending_users)
