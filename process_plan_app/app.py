@@ -345,7 +345,7 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
                 "sampleDefinitions": [                
                     {
                         "instructions": "Place the part on the tester device",
-                        "sampleDefinitionName": "",
+                        "sampleDefinitionName": meta_dict.get("lineName", "") + "EOLTest",
                         "plmId": "PLM_ID",
                         "sampleClass": "Actuator EOL Tester",
                         "toolResourceInstance": "Actuator_Tester_1",
@@ -438,7 +438,7 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
                         sample_definitions = [
                             {
                                 "instructions": "Next?",
-                                "sampleDefinitionName": "",
+                                "sampleDefinitionName": meta_dict.get("lineName", "") + "Confirm",
                                 "plmId": "PLM_ID",
                                 "sampleClass": "Confirm",
                                 "sampleQty": 1,
@@ -454,7 +454,7 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
                         if pd.notna(row.get("Tools")) and pd.notna(row.get("Pset Program Number")):
                             torque_sample = {
                                 "instructions": row["Title"],
-                                "sampleDefinitionName": "",
+                                "sampleDefinitionName": meta_dict.get("lineName", "") + "Torque",
                                 "plmId": "PLM_ID",
                                 "toolResourceInstance": row["Tools"],
                                 "sampleClass": "Torque",
@@ -556,7 +556,7 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
                 "sampleDefinitions": [                
                     {
                         "instructions": "Place the part on the tester device",
-                        "sampleDefinitionName": "",
+                        "sampleDefinitionName": meta_dict.get("lineName", "") + "EOLTest",
                         "plmId": "PLM_ID",
                         "sampleClass": "Actuator EOL Tester",
                         "toolResourceInstance": "Actuator_Tester_1",
@@ -655,7 +655,7 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
                             "sampleDefinitions": [
                                 {
                                     "instructions": "Next?",
-                                    "sampleDefinitionName": "",
+                                    "sampleDefinitionName": meta_dict.get("lineName", "") + "Confirm",
                                     "plmId": "PLM_ID",
                                     "sampleClass": "Confirm",
                                     "sampleQty": 1,
