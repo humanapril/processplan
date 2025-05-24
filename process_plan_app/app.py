@@ -424,7 +424,8 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
 
                         for _, r in rows.iterrows():
                             if pd.notna(r.get("Parts")):
-                                materials.append({
+
+                                material = {
                                     "inputMaterialPMlmId": "PLM_ID",
                                     "materialName": "",
                                     "quantity": int(r["Qty"]) if pd.notna(r["Qty"]) else 1,
@@ -433,7 +434,30 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
                                     "units": "each",
                                     "scan": "True" if r["Scan"] else "False",
                                     "parentIdentifier": "True" if r["Trace"] else "False"
-                                })
+                                }
+
+                                # Add alternates
+                                alternates = []
+                                if pd.notna(r.get("Alternate 1")):
+                                    alternates.append({
+                                        "inputMaterialPMlmId": "PLM_ID",
+                                        "materialName": "",
+                                        "materialNumber": str(r["Alternate 1"]).strip(),
+                                        "materialTitle": str(r["Atl 1 Name"]).strip() if pd.notna(r.get("Atl 1 Name")) else ""
+                                    })
+                                if pd.notna(r.get("Alternate 2")):
+                                    alternates.append({
+                                        "inputMaterialPMlmId": "PLM_ID",
+                                        "materialName": "",
+                                        "materialNumber": str(r["Alternate 2"]).strip(),
+                                        "materialTitle": str(r["Alt 2 Name"]).strip() if pd.notna(r.get("Alt 2 Name")) else ""
+                                    })
+
+                                if alternates:
+                                    material["alternates"] = alternates
+
+                                materials.append(material)
+
 
                         sample_definitions = [
                             {
@@ -635,7 +659,8 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
 
                         for _, r in rows.iterrows():
                             if pd.notna(r.get("Parts")):
-                                materials.append({
+
+                                material = {
                                     "inputMaterialPMlmId": "PLM_ID",
                                     "materialName": "",
                                     "quantity": int(r["Qty"]) if pd.notna(r["Qty"]) else 1,
@@ -644,7 +669,30 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
                                     "units": "each",
                                     "scan": "True" if r["Scan"] else "False",
                                     "parentIdentifier": "True" if r["Trace"] else "False"
-                                })
+                                }
+
+                                # Add alternates
+                                alternates = []
+                                if pd.notna(r.get("Alternate 1")):
+                                    alternates.append({
+                                        "inputMaterialPMlmId": "PLM_ID",
+                                        "materialName": "",
+                                        "materialNumber": str(r["Alternate 1"]).strip(),
+                                        "materialTitle": str(r["Atl 1 Name"]).strip() if pd.notna(r.get("Atl 1 Name")) else ""
+                                    })
+                                if pd.notna(r.get("Alternate 2")):
+                                    alternates.append({
+                                        "inputMaterialPMlmId": "PLM_ID",
+                                        "materialName": "",
+                                        "materialNumber": str(r["Alternate 2"]).strip(),
+                                        "materialTitle": str(r["Alt 2 Name"]).strip() if pd.notna(r.get("Alt 2 Name")) else ""
+                                    })
+
+                                if alternates:
+                                    material["alternates"] = alternates
+
+                                materials.append(material)
+
 
                         segment = {
                             "segmentTitle": row["Title"],
