@@ -350,7 +350,7 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
                     "sampleDefinitions": [                
                         {
                             "instructions": "Place the part on the tester device",
-                            "sampleDefinitionName": meta_dict.get("lineName", "") + station_str + "Test",
+                            "sampleDefinitionName": meta_dict.get("lineName", "") + "_" + station_str + "_Test",
                             "plmId": "PLM_ID",
                             "sampleClass": "EOL_Tester",
                             "toolResourceInstance": "EOL_Tester_1",
