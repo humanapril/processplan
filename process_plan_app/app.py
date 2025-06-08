@@ -40,7 +40,7 @@ MATERIAL_LIST = [
     "CITRINE", "PAPAYA", "THUMB", "FINGER", "HAND",
     "ARM", "UPPER LEG", "SHIN", "NECK", "FOREARM",
     "FOOT", "PELVIS", "COMPUTE", "TORSO", "FINAL",
-    "EOL", "BATTERY CELLS", "BATTERY MODULE", "BATTERY PACK" 
+    "EOL", "BATTERY"
 ]
 
 
@@ -571,37 +571,66 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
                             }
                         ]
 
+
                         if pd.notna(row.get("Tools")) and pd.notna(row.get("Pset Program Number")):
-                            torque_sample = {
-                                "instructions": row["Title"],
-                                "sampleDefinitionName": meta_dict.get("lineName", "") + "Torque",
-                                "plmId": "PLM_ID",
-                                "toolResourceInstance": row["Tools"],
-                                "sampleClass": "Torque",
-                                "sampleQty": int(row["Qty"]) if pd.notna(row["Qty"]) else 1,
-                                "settings": {
-                                    "pSet": str(row["Pset Program Number"])
-                                },
-                                "attributes": {
-                                    "PassFail": {
-                                        "DataType": "BOOLEAN", "Required": True, "Description": "STRING", "Format": "#0.00", "Order": 1,
-                                        "MinimumValue": "NUMERIC", "MaximumValue": "NUMERIC"
-                                    },
-                                    "Torque": {
-                                        "DataType": "REAL", "Required": True, "Description": "STRING", "Format": "#0.00", "Order": 2,
-                                        "NominalValue": "1.5", "MinimumValue": "1.3", "MaximumValue": "1.7"
-                                    },
-                                    "Angle": {
-                                        "DataType": "REAL", "Required": True, "Description": "STRING", "Format": "#0.00", "Order": 3,
-                                        "MinimumValue": "NUMERIC", "MaximumValue": "NUMERIC", "NominalValue": ""
-                                    },
-                                    "PSet": {
-                                        "DataType": "INTEGER", "Required": True, "Description": "STRING", "Format": "#0.00", "Order": 4,
-                                        "MinimumValue": "", "MaximumValue": ""
+                            tools_value = str(row["Tools"]).strip().lower()
+
+                            if tools_value == "manual entry":
+                                datatype = str(row["Pset Program Number"]).strip().upper()
+                                format_val = "#0.00" if datatype == "REAL" else "#0"
+
+                                manual_sample = {
+                                    "instructions": row["Title"],
+                                    "sampleDefinitionName": str(row["Parts"]).strip() if pd.notna(row["Parts"]) else "ManualEntry",
+                                    "plmId": "PLM_ID",
+                                    "sampleClass": "Manual Entry",
+                                    "sampleQty": int(row["Qty"]) if pd.notna(row["Qty"]) else 1,
+                                    "attributes": {
+                                        str(row["Parts"]).strip(): {
+                                            "DataType": datatype,
+                                            "Required": "True",
+                                            "Description": str(row["Parts"]).strip(),
+                                            "Format": format_val,
+                                            "Order": "1",
+                                            "MinimumValue": "",
+                                            "MaximumValue": ""
+                                        }
                                     }
                                 }
-                            }
-                            sample_definitions.append(torque_sample)
+                                segment["sampleDefinitions"].append(manual_sample)
+
+                            else:
+                                torque_sample = {
+                                    "instructions": row["Title"],
+                                    "sampleDefinitionName": meta_dict.get("lineName", "") + "Torque",
+                                    "plmId": "PLM_ID",
+                                    "toolResourceInstance": row["Tools"],
+                                    "sampleClass": "Torque",
+                                    "sampleQty": int(row["Qty"]) if pd.notna(row["Qty"]) else 1,
+                                    "settings": {
+                                        "pSet": str(row["Pset Program Number"])
+                                    },
+                                    "attributes": {
+                                        "PassFail": {
+                                            "DataType": "BOOLEAN", "Required": True, "Description": "STRING", "Format": "#0.00", "Order": 1,
+                                            "MinimumValue": "NUMERIC", "MaximumValue": "NUMERIC"
+                                        },
+                                        "Torque": {
+                                            "DataType": "REAL", "Required": True, "Description": "STRING", "Format": "#0.00", "Order": 2,
+                                            "NominalValue": "1.5", "MinimumValue": "1.3", "MaximumValue": "1.7"
+                                        },
+                                        "Angle": {
+                                            "DataType": "REAL", "Required": True, "Description": "STRING", "Format": "#0.00", "Order": 3,
+                                            "MinimumValue": "NUMERIC", "MaximumValue": "NUMERIC", "NominalValue": ""
+                                        },
+                                        "PSet": {
+                                            "DataType": "INTEGER", "Required": True, "Description": "STRING", "Format": "#0.00", "Order": 4,
+                                            "MinimumValue": "", "MaximumValue": ""
+                                        }
+                                    }
+                                }
+                                segment["sampleDefinitions"].append(torque_sample)
+
 
                         segment = {
                             "segmentTitle": row["Title"],
