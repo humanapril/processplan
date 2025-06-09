@@ -597,7 +597,7 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
                                         }
                                     }
                                 }
-                                segment["sampleDefinitions"].append(manual_sample)
+                                sample_definitions.append(manual_sample)
 
                             else:
                                 torque_sample = {
@@ -629,7 +629,7 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
                                         }
                                     }
                                 }
-                                segment["sampleDefinitions"].append(torque_sample)
+                                sample_definitions.append(torque_sample)
 
 
                         segment = {
