@@ -268,6 +268,25 @@
           accept=".json"
           required
         />
+
+        <label for="revision_note"
+          >Revision Note (what changed in this process plan):</label
+        >
+        <textarea
+          name="revision_note"
+          id="revision_note"
+          rows="3"
+          style="
+            width: 100%;
+            background-color: #151515;
+            color: #ccc;
+            border: 1px solid #444;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 10px;
+          "
+        ></textarea>
+
         <button type="submit" id="importBtn">Upload and Post to MES</button>
 
         <div id="progressContainer" style="display: none; margin-top: 20px">
@@ -327,7 +346,8 @@
 
         const formData = new FormData();
         formData.append("json_file", file);
-
+        const revisionNote = document.getElementById("revision_note").value;
+        formData.append("revision_note", revisionNote);
         const totalTimeout = 120000;
         const steps = 5;
         const stepInterval = totalTimeout / steps;

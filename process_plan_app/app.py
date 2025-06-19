@@ -243,6 +243,7 @@ def index():
 @login_required
 def import_single_json():
     file = request.files.get('json_file')
+    revision_note = request.form.get('revision_note', '').strip()
     if not file or not file.filename.endswith('.json'):
         print("❌ Invalid file uploaded or missing")
         return jsonify({"error": "Invalid file type."}), 400
@@ -268,6 +269,7 @@ def import_single_json():
         history = ProcessPlanHistory(
             user_email=current_user.email,
             uploaded_filename=file.filename,
+            revision_note=revision_note,
             status_code=str(response.status_code),
             response_summary=response.text[:1000],
             json_blob=raw_data
@@ -765,6 +767,7 @@ class ProcessPlanHistory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_email = db.Column(db.String(255), nullable=False)
     uploaded_filename = db.Column(db.String(255), nullable=False)
+    revision_note = db.Column(db.String(255), nullable=False)
     upload_time = db.Column(db.DateTime, default=db.func.now())
     status_code = db.Column(db.String(20))
     response_summary = db.Column(db.Text)
