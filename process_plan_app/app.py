@@ -258,7 +258,7 @@ def import_single_json():
             json=data,
             auth=HTTPBasicAuth('figure', 'figure'),
             headers={"Content-Type": "application/json"},
-            timeout=300
+            timeout=500
         )
 
         print(f"✅ MES Response: {response.status_code}")
