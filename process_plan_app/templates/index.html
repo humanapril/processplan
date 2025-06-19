@@ -21,8 +21,9 @@
       }
 
       .container {
-        max-width: 700px;
-        margin: 50px auto;
+        max-width: 1200px; /* or remove this line to go full width */
+        width: 90vw; /* makes use of 90% of viewport width */
+        margin: 30px auto;
         padding: 30px;
         background: #1e1e1e;
         border-radius: 15px;
@@ -109,6 +110,28 @@
 
       .form-section.active {
         display: block;
+      }
+
+      /* === Responsive layout for smaller screens === */
+      @media (max-width: 768px) {
+        .container {
+          width: 95vw;
+          padding: 20px;
+        }
+
+        .tabs {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .tab {
+          text-align: center;
+        }
+
+        input[type="file"],
+        select {
+          width: 100%;
+        }
       }
     </style>
   </head>
@@ -216,7 +239,9 @@
         enctype="multipart/form-data"
       >
         <input type="hidden" name="form_type" value="pdf" />
-        <label for="pdf_files">Upload Work Instruction PDF File to Split:</label>
+        <label for="pdf_files"
+          >Upload Work Instruction PDF File to Split:</label
+        >
         <input
           type="file"
           name="pdf_files"
