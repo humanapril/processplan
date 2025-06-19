@@ -509,8 +509,62 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
                     "operationSegments": []
                 }
 
-                if not op_row.empty and any(kw in operation_title.lower() for kw in ["test", "eol"]):
+                if not op_row.empty and "cure buffer" in operation_title.lower():
+                    sample_class_value = operation_title.replace(" ", "").replace("Buffer", "").replace("buffer", "")
+                    cure_buffer_segment = {
+                        "segmentTitle": operation_title,
+                        "segmentName": "",
+                        "segmentPlmId": "",
+                        "segmentSequence": 0,
+                        "operationInputMaterials": [],
+                        "sampleDefinitions": [
+                            {
+                                "instructions": "StartTimestamp",
+                                "sampleDefinitionName": "StartTimestamp",
+                                "plmId": "PLM_ID",
+                                "sampleClass": sample_class_value,
+                                "sampleQty": 1,
+                                "attributes": {
+                                    "PassFail": {
+                                        "DataType": "BOOLEAN",
+                                        "Required": "True",
+                                        "Description": "STRING",
+                                        "Format": "#0.00",
+                                        "Order": "1",
+                                        "MinimumValue": "",
+                                        "MaximumValue": ""
+                                    }
+                                }
+                            },
+                            {
+                                "instructions": "EndTimestamp",
+                                "sampleDefinitionName": "EndTimestamp",
+                                "plmId": "PLM_ID",
+                                "sampleClass": sample_class_value,
+                                "sampleQty": 1,
+                                "attributes": {
+                                    "PassFail": {
+                                        "DataType": "BOOLEAN",
+                                        "Required": "True",
+                                        "Description": "STRING",
+                                        "Format": "#0.00",
+                                        "Order": "1",
+                                        "MinimumValue": "",
+                                        "MaximumValue": ""
+                                    }
+                                }
+                            }
+                        ],
+                        "workInstruction": {
+                            "pdfLink": "",
+                            "plmId": "PLM_ID"
+                        }
+                    }
+                    operation["operationSegments"].append(cure_buffer_segment)
+
+                elif not op_row.empty and any(kw in operation_title.lower() for kw in ["test", "eol"]):
                     operation["operationSegments"].append(predefined_segment)
+
                 else:
                     step_groups = group[group["Step"] != "000"].groupby("Step")
 
@@ -519,7 +573,7 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
                         materials = []
 
                         for _, r in rows.iterrows():
-                            if pd.notna(r.get("Parts")):
+                            if pd.notna(r.get("Parts"))and str(r.get("Tools", "")).strip().lower() != "manual entry":
 
                                 material = {
                                     "inputMaterialPMlmId": "PLM_ID",
@@ -631,7 +685,7 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
                                 }
                                 sample_definitions.append(torque_sample)
 
-
+                        # Build segment
                         segment = {
                             "segmentTitle": row["Title"],
                             "segmentName": "",
@@ -639,10 +693,24 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
                             "segmentSequence": 0,
                             "operationInputMaterials": materials,
                             "sampleDefinitions": sample_definitions,
-                            "workInstruction": {
-                                "pdfLink": row["Work Instruction"] if pd.notna(row["Work Instruction"]) else "",
-                                "plmId": "PLM_ID"
-                            }
+                        }
+
+                        # Optional customActions if Fixture is provided
+                        custom_actions = []
+                        if pd.notna(row.get("Fixture")) and str(row["Fixture"]).strip():
+                            custom_actions.append({
+                                "actionType": "Scan Fixture",
+                                "actionTarget": str(row["Fixture"]).strip(),
+                                "actionSettings": {}
+                            })
+
+                        if custom_actions:
+                            segment["customActions"] = custom_actions
+
+                        # Work instruction block
+                        segment["workInstruction"] = {
+                            "pdfLink": row["Work Instruction"] if pd.notna(row["Work Instruction"]) else "",
+                            "plmId": "PLM_ID"
                         }
 
                         operation["operationSegments"].append(segment)
