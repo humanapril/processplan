@@ -583,7 +583,7 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
                                     "quantity": int(r["Qty"]) if pd.notna(r["Qty"]) else 1,
                                     "materialNumber": str(r["Parts"]).strip(),
                                     "materialTitle": "",
-                                    "units": "each",
+                                    "units": str(r["Unit"]).strip() if pd.notna(r.get("Unit")) and str(r["Unit"]).strip() else "each",
                                     "scan": "True" if r["Scan"] else "False",
                                     "parentIdentifier": "True" if r["Trace"] else "False"
                                 }
