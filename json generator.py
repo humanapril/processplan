@@ -304,60 +304,83 @@ for filename in os.listdir(input_dir):
                         }
                         segment["sampleDefinitions"].append(confirm_sample)
 
-                        # Torque sample
-                        if pd.notna(first_row.get("Tools")) and pd.notna(first_row.get("Pset Program Number")):
-                            torque_sample = {
-                                "instructions": first_row["Title"],
-                                "sampleDefinitionName": line_name + "Torque" if line_name else "",
-                                "plmId": "PLM_ID",
-                                "toolResourceInstance": first_row["Tools"],
-                                "sampleClass": "Torque",
-                                "sampleQty": int(first_row["Qty"]) if pd.notna(first_row["Qty"]) else 1,
-                                "settings": {
-                                    "pSet": str(first_row["Pset Program Number"])
-                                },
-                                "attributes": {
-                                    "PassFail": {
-                                        "DataType": "BOOLEAN",
-                                        "Required": True,
-                                        "Description": "STRING",
-                                        "Format": "#0.00",
-                                        "Order": 1,
-                                        "MinimumValue": "",
-                                        "MaximumValue": ""
-                                    },
-                                    "Torque": {
-                                        "DataType": "REAL",
-                                        "Required": True,
-                                        "Description": "STRING",
-                                        "Format": "#0.00",
-                                        "Order": 2,
-                                        "NominalValue": "1.5",
-                                        "MinimumValue": "1.3",
-                                        "MaximumValue": "1.7"
-                                    },
-                                    "Angle": {
-                                        "DataType": "REAL",
-                                        "Required": True,
-                                        "Description": "STRING",
-                                        "Format": "#0.00",
-                                        "Order": 3,
-                                        "MinimumValue": "",
-                                        "MaximumValue": "",
-                                        "NominalValue": ""
-                                    },
-                                    "PSet": {
-                                        "DataType": "INTEGER",
-                                        "Required": "True",
-                                        "Description": "STRING",
-                                        "Format": "#0.00",
-                                        "Order": 4,
-                                        "MinimumValue": "",
-                                        "MaximumValue": ""
+                        # Handle different tool types
+                        if pd.notna(first_row.get("Tools")):
+                            if first_row["Tools"] == "Manual Entry":
+                                # Manual Entry sample
+                                manual_entry_sample = {
+                                    "instructions": first_row["Title"],
+                                    "sampleDefinitionName": "Weight",  # Use "Weight" as default for Manual Entry
+                                    "plmId": "PLM_ID",
+                                    "sampleClass": "Manual Entry",
+                                    "sampleQty": int(first_row["Qty"]) if pd.notna(first_row["Qty"]) else 1,
+                                    "attributes": {
+                                        "Weight": {
+                                            "DataType": "REAL",
+                                            "Required": True,
+                                            "Description": "Weight",
+                                            "Format": "#0.00",
+                                            "Order": "1",
+                                            "MinimumValue": "",
+                                            "MaximumValue": ""
+                                        }
                                     }
                                 }
-                            }
-                            segment["sampleDefinitions"].append(torque_sample)
+                                segment["sampleDefinitions"].append(manual_entry_sample)
+                            elif pd.notna(first_row.get("Pset Program Number")):
+                                # Torque sample
+                                torque_sample = {
+                                    "instructions": first_row["Title"],
+                                    "sampleDefinitionName": line_name + "Torque" if line_name else "",
+                                    "plmId": "PLM_ID",
+                                    "toolResourceInstance": first_row["Tools"],
+                                    "sampleClass": "Torque",
+                                    "sampleQty": int(first_row["Qty"]) if pd.notna(first_row["Qty"]) else 1,
+                                    "settings": {
+                                        "pSet": str(first_row["Pset Program Number"])
+                                    },
+                                    "attributes": {
+                                        "PassFail": {
+                                            "DataType": "BOOLEAN",
+                                            "Required": True,
+                                            "Description": "STRING",
+                                            "Format": "#0.00",
+                                            "Order": 1,
+                                            "MinimumValue": "",
+                                            "MaximumValue": ""
+                                        },
+                                        "Torque": {
+                                            "DataType": "REAL",
+                                            "Required": True,
+                                            "Description": "STRING",
+                                            "Format": "#0.00",
+                                            "Order": 2,
+                                            "NominalValue": "1.5",
+                                            "MinimumValue": "1.3",
+                                            "MaximumValue": "1.7"
+                                        },
+                                        "Angle": {
+                                            "DataType": "REAL",
+                                            "Required": True,
+                                            "Description": "STRING",
+                                            "Format": "#0.00",
+                                            "Order": 3,
+                                            "MinimumValue": "",
+                                            "MaximumValue": "",
+                                            "NominalValue": ""
+                                        },
+                                        "PSet": {
+                                            "DataType": "INTEGER",
+                                            "Required": "True",
+                                            "Description": "STRING",
+                                            "Format": "#0.00",
+                                            "Order": 4,
+                                            "MinimumValue": "",
+                                            "MaximumValue": ""
+                                        }
+                                    }
+                                }
+                                segment["sampleDefinitions"].append(torque_sample)
 
                         operation["operationSegments"].append(segment)
 
