@@ -36,13 +36,12 @@ def handle_unauthorized():
     return redirect(url_for('login'))
 
 MATERIAL_LIST = [
-    "SAPPHIRE", "LAPIS", "JADE", "CARROT",
-    "CITRINE", "PAPAYA", "THUMB", "FINGER", "HAND",
-    "ARM", "UPPER LEG", "SHIN", "NECK", "FOREARM",
-    "FOOT", "PELVIS", "COMPUTE", "TORSO", "FINAL",
-    "EOL", "BATTERY"
+    "JADE", "SAPPHIRE", "LAPIS", "PAPAYA", "CARROT", "CITRINE", "MRC", "TACTILE", "FINGER", "FINGERMOTOR",
+    "THUMBSENSOR", "THUMBMOTOR", "THUMB", "HANDPALM", "HANDCAMERAGLUE", "HAND",
+    "ARMRIGHT", "ARMLEFT", "LEGRIGHT", "LEGLEFT", "SHIN", "NECKWRIST", 
+    "PELVIS", "COMPUTE", "TORSOASSEMBLY", "FINALASSEMBLY", "BRINGUP",
+    "BMSTEST", "CELLTEST", "BATTERYMAIN", "CASEPREPSUB", "BUSBARCCASUB", "BMSBOTTOMCOVERSUB"
 ]
-
 
 
 @app.template_filter('localtime')
@@ -259,7 +258,7 @@ def import_single_json():
             json=data,
             auth=HTTPBasicAuth('figure', 'figure'),
             headers={"Content-Type": "application/json"},
-            timeout=500
+            timeout=600
         )
 
         print(f"✅ MES Response: {response.status_code}")
@@ -320,237 +319,132 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
                 }
             }
 
-            metadata = {
-                "scopeMaterialNumber": meta_dict.get("scopeMaterialNumber", ""),
-                "scopeMaterialTitle": meta_dict.get("scopeMaterialTitle", ""),
-                "scopeMaterialPlmId": meta_dict.get("scopeMaterialPlmId", "00000010"),
-                "areaName": meta_dict.get("areaName", ""),
-                "lineName": meta_dict.get("lineName", ""),
-                "operationsDefinitions": []
-            }
+            # Get line names and split by semicolon
+            line_names_raw = meta_dict.get("lineName", "")
+            line_names = [name.strip() for name in line_names_raw.split(';') if name.strip()]
 
-            headers = df.iloc[7, 1:].astype(str).str.strip().tolist()
-            data_df = df.iloc[8:, 1:1+len(headers)]
-            data_df.columns = headers
+            # If no line names found, use a default
+            if not line_names:
+                line_names = [""]
 
-            data_df["Station"] = data_df["Station"].ffill().infer_objects(copy=False)
-            data_df["Step"] = data_df["Step"].fillna("").astype(str).str.zfill(3)
-            data_df["Scan"] = data_df["Scan"].astype(str).str.lower().eq("true")
-            data_df["Trace"] = data_df["Trace"].astype(str).str.lower().eq("true")
-
-
-            for station, group in data_df.groupby("Station"):
-                station_int = int(station)
-                station_str = f"{station_int:03}"
-
-                predefined_segment = {
-                    "segmentTitle": "EOL Testing",
-                    "segmentName": "",
-                    "segmentPlmId": "",
-                    "segmentSequence": 0,
-                    "operationInputMaterials": [],
-                    "sampleDefinitions": [                
-                        {
-                            "instructions": "Place the part on the tester device",
-                            "sampleDefinitionName": meta_dict.get("lineName", "") + "_" + station_str + "_Test",
-                            "plmId": "PLM_ID",
-                            "sampleClass": "EOL_Tester",
-                            "toolResourceInstance": "EOL_Tester_1",
-                            "sampleQty": 1,
-                            "settings": {"Configuration N/L/R": "N"},
-                            "attributes": {
-                                "testUUID": {
-                                    "DataType": "STRING",
-                                    "Required": True,
-                                    "Description": "Defined by Test SW",
-                                    "Format": "",
-                                    "Order": 1,
-                                    "MinimumValue": "",
-                                    "MaximumValue": ""
-                                },
-                                "testType": {
-                                    "DataType": "STRING",
-                                    "Required": True,
-                                    "Description": "Test type, e.g. battery-pre-potting",
-                                    "Format": "",
-                                    "Order": 2,
-                                    "MinimumValue": "",
-                                    "MaximumValue": ""
-                                },
-                                "testStatus": {
-                                    "DataType": "STRING",
-                                    "Required": True,
-                                    "Description": "Status of test: PASS, FAIL, or ERROR",
-                                    "Format": "",
-                                    "Order": 3,
-                                    "MinimumValue": "",
-                                    "MaximumValue": ""
-                                },
-                                "testErrorCode": {
-                                    "DataType": "INTEGER",
-                                    "Required": True,
-                                    "Description": "Classifies type of error encountered (e.g., 0 if none)",
-                                    "Format": "",
-                                    "Order": 4,
-                                    "MinimumValue": "",
-                                    "MaximumValue": ""
-                                },
-                                "testErrors": {
-                                    "DataType": "STRING",
-                                    "Required": True,
-                                    "Description": "List of errors separated by semicolon",
-                                    "Format": "",
-                                    "Order": 5,
-                                    "MinimumValue": "",
-                                    "MaximumValue": ""
-                                },
-                                "rejectCode": {
-                                    "DataType": "INTEGER",
-                                    "Required": True,
-                                    "Description": "Reject code classifying error type",
-                                    "Format": "",
-                                    "Order": 6,
-                                    "MinimumValue": "",
-                                    "MaximumValue": ""
-                                },
-                                "rejectReason": {
-                                    "DataType": "STRING",
-                                    "Required": True,
-                                    "Description": "List of failed test parameters separated by semicolon",
-                                    "Format": "",
-                                    "Order": 7,
-                                    "MinimumValue": "",
-                                    "MaximumValue": ""
-                                },
-                                "testRevision": {
-                                    "DataType": "STRING",
-                                    "Required": True,
-                                    "Description": "Revision code",
-                                    "Format": "",
-                                    "Order": 8,
-                                    "MinimumValue": "",
-                                    "MaximumValue": ""
-                                },
-                                "testCount": {
-                                    "DataType": "INTEGER",
-                                    "Required": True,
-                                    "Description": "Number of tests run since permission granted",
-                                    "Format": "",
-                                    "Order": 9,
-                                    "MinimumValue": "",
-                                    "MaximumValue": ""
-                                },
-                                "testTimestamp": {
-                                    "DataType": "STRING",
-                                    "Required": True,
-                                    "Description": "Timestamp in 'YYYY-MM-DD HH:MM:SS UTC' format",
-                                    "Format": "YYYY-MM-DD HH:mm:ss UTC",
-                                    "Order": 10,
-                                    "MinimumValue": "",
-                                    "MaximumValue": ""
-                                },
-                                "testDuration": {
-                                    "DataType": "STRING",
-                                    "Required": True,
-                                    "Description": "Duration of test in 'HH:MM:SS' format",
-                                    "Format": "HH:MM:SS",
-                                    "Order": 11,
-                                    "MinimumValue": "",
-                                    "MaximumValue": ""
-                                },
-                                "urlString": {
-                                    "DataType": "STRING",
-                                    "Required": True,
-                                    "Description": "URL to detailed test report",
-                                    "Format": "URL",
-                                    "Order": 12,
-                                    "MinimumValue": "",
-                                    "MaximumValue": ""
-                                },
-                                "operatorUserName": {
-                                    "DataType": "STRING",
-                                    "Required": True,
-                                    "Description": "User name of operator starting tests",
-                                    "Format": "",
-                                    "Order": 13,
-                                    "MinimumValue": "",
-                                    "MaximumValue": ""
-                                },
-                                "operatorLevel": {
-                                    "DataType": "STRING",
-                                    "Required": True,
-                                    "Description": "Operator level, e.g., OPERATOR or ADMIN",
-                                    "Format": "",
-                                    "Order": 14,
-                                    "MinimumValue": "",
-                                    "MaximumValue": ""
-                                },
-                                "testMetadata": {
-                                    "DataType": "STRING",
-                                    "Required": True,
-                                    "Description": "Catch-all JSON string with additional test info",
-                                    "Format": "JSON string",
-                                    "Order": 15,
-                                    "MinimumValue": "",
-                                    "MaximumValue": ""
-                                }
-                            }
-                        }
-                    ],
-                    "workInstruction": {"plmId": "PLM_ID", "pdfLink": ""}
+            # Create a JSON file for each line name
+            for line_name in line_names:
+                metadata = {
+                    "scopeMaterialNumber": meta_dict.get("scopeMaterialNumber", ""),
+                    "scopeMaterialTitle": meta_dict.get("scopeMaterialTitle", ""),
+                    "scopeMaterialPlmId": meta_dict.get("scopeMaterialPlmId", "00000010"),
+                    "areaName": meta_dict.get("areaName", ""),
+                    "lineName": line_name,
+                    "operationsDefinitions": []
                 }
 
-                op_row = group[group["Step"] == "000"]
-                operation_title = op_row["Title"].values[0] if not op_row.empty else f"Station {station_str}"
+                headers = df.iloc[7, 1:].astype(str).str.strip().tolist()
+                data_df = df.iloc[8:, 1:1+len(headers)]
+                data_df.columns = headers
 
-                operation = {
-                    "operationTitle": operation_title,
-                    "operationName": "",
-                    "operationPlmId": "",
-                    "workstationName": f"S{station_str}",
-                    "operationSegments": []
-                }
+                data_df["Station"] = data_df["Station"].ffill().infer_objects(copy=False)
+                data_df["Step"] = data_df["Step"].fillna("").astype(str).str.zfill(3)
+                data_df["Scan"] = data_df["Scan"].astype(str).str.lower().eq("true")
+                data_df["Trace"] = data_df["Trace"].astype(str).str.lower().eq("true")
 
-                if not op_row.empty and "cure buffer" in operation_title.lower():
-                    sample_class_value = operation_title.replace(" ", "").replace("Buffer", "").replace("buffer", "")
-                    cure_buffer_segment = {
-                        "segmentTitle": operation_title,
+                for station, group in data_df.groupby("Station"):
+                    station_int = int(station)
+                    station_str = f"{station_int:03}"
+
+                    predefined_segment = {
+                        "segmentTitle": "EOL Testing",
                         "segmentName": "",
                         "segmentPlmId": "",
                         "segmentSequence": 0,
                         "operationInputMaterials": [],
-                        "sampleDefinitions": [
+                        "sampleDefinitions": [                
                             {
-                                "instructions": "StartTimestamp",
-                                "sampleDefinitionName": "StartTimestamp",
+                                "instructions": "Place the part on the tester device",
+                                "sampleDefinitionName": line_name + "_" + station_str + "_Test",
                                 "plmId": "PLM_ID",
-                                "sampleClass": sample_class_value,
+                                "sampleClass": "EOL_Tester",
+                                "toolResourceInstance": "EOL_Tester_1",
                                 "sampleQty": 1,
+                                "settings": {"Configuration N/L/R": "N"},
                                 "attributes": {
-                                    "PassFail": {
-                                        "DataType": "BOOLEAN",
-                                        "Required": "True",
-                                        "Description": "STRING",
-                                        "Format": "#0.00",
-                                        "Order": "1",
+                                    "testUUID": {
+                                        "DataType": "STRING",
+                                        "Required": True,
+                                        "Description": "Defined by Test SW",
+                                        "Format": "",
+                                        "Order": 1,
                                         "MinimumValue": "",
                                         "MaximumValue": ""
-                                    }
-                                }
-                            },
-                            {
-                                "instructions": "EndTimestamp",
-                                "sampleDefinitionName": "EndTimestamp",
-                                "plmId": "PLM_ID",
-                                "sampleClass": sample_class_value,
-                                "sampleQty": 1,
-                                "attributes": {
-                                    "PassFail": {
-                                        "DataType": "BOOLEAN",
-                                        "Required": "True",
-                                        "Description": "STRING",
-                                        "Format": "#0.00",
-                                        "Order": "1",
+                                    },
+                                    "testType": {
+                                        "DataType": "STRING",
+                                        "Required": True,
+                                        "Description": "Test type, e.g. battery-pre-potting",
+                                        "Format": "",
+                                        "Order": 2,
+                                        "MinimumValue": "",
+                                        "MaximumValue": ""
+                                    },
+                                    "testStatus": {
+                                        "DataType": "STRING",
+                                        "Required": True,
+                                        "Description": "Status of test: PASS, FAIL, or ERROR",
+                                        "Format": "",
+                                        "Order": 3,
+                                        "MinimumValue": "",
+                                        "MaximumValue": ""
+                                    },
+                                    "testErrorCode": {
+                                        "DataType": "INTEGER",
+                                        "Required": True,
+                                        "Description": "Classifies type of error encountered (e.g., 0 if none)",
+                                        "Format": "",
+                                        "Order": 4,
+                                        "MinimumValue": "",
+                                        "MaximumValue": ""
+                                    },
+                                    "testErrors": {
+                                        "DataType": "STRING",
+                                        "Required": True,
+                                        "Description": "List of errors separated by semicolon",
+                                        "Format": "",
+                                        "Order": 5,
+                                        "MinimumValue": "",
+                                        "MaximumValue": ""
+                                    },
+                                    "testStartTime": {
+                                        "DataType": "STRING",
+                                        "Required": True,
+                                        "Description": "ISO 8601 timestamp when test started",
+                                        "Format": "",
+                                        "Order": 6,
+                                        "MinimumValue": "",
+                                        "MaximumValue": ""
+                                    },
+                                    "testEndTime": {
+                                        "DataType": "STRING",
+                                        "Required": True,
+                                        "Description": "ISO 8601 timestamp when test ended",
+                                        "Format": "",
+                                        "Order": 7,
+                                        "MinimumValue": "",
+                                        "MaximumValue": ""
+                                    },
+                                    "testDuration": {
+                                        "DataType": "INTEGER",
+                                        "Required": True,
+                                        "Description": "Test duration in seconds",
+                                        "Format": "",
+                                        "Order": 8,
+                                        "MinimumValue": "",
+                                        "MaximumValue": ""
+                                    },
+                                    "testResults": {
+                                        "DataType": "STRING",
+                                        "Required": True,
+                                        "Description": "JSON string containing test results",
+                                        "Format": "",
+                                        "Order": 9,
                                         "MinimumValue": "",
                                         "MaximumValue": ""
                                     }
@@ -558,107 +452,68 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
                             }
                         ],
                         "workInstruction": {
-                            "pdfLink": "",
-                            "plmId": "PLM_ID"
+                            "plmId": "PLM_ID",
+                            "pdfLink": ""
                         }
                     }
-                    operation["operationSegments"].append(cure_buffer_segment)
 
-                elif not op_row.empty and any(kw in operation_title.lower() for kw in ["test", "eol"]):
-                    operation["operationSegments"].append(predefined_segment)
+                    op_row = group[group["Step"] == "000"]
+                    operation_title = op_row["Title"].values[0] if not op_row.empty else f"Station {station_str}"
 
-                else:
-                    step_groups = group[group["Step"] != "000"].groupby("Step")
+                    operation = {
+                        "operationTitle": operation_title,
+                        "operationName": "",
+                        "operationPlmId": "",
+                        "workstationName": f"S{station_str}",
+                        "operationSegments": []
+                    }
 
-                    for step, rows in step_groups:
-                        row = rows.iloc[0]
-                        materials = []
-
-                        for _, r in rows.iterrows():
-                            if pd.notna(r.get("Parts"))and str(r.get("Tools", "")).strip().lower() != "manual entry":
-
-                                material = {
+                    if not op_row.empty and any(keyword in str(operation_title) for keyword in ["EOL", "Test", "test"]):
+                        operation["operationSegments"].append(predefined_segment)
+                    else:
+                        step_rows = group[group["Step"] != "000"]
+                        for _, row in step_rows.iterrows():
+                            materials = []
+                            if pd.notna(row.get("Parts")):
+                                materials.append({
                                     "inputMaterialPMlmId": "PLM_ID",
                                     "materialName": "",
-                                    "quantity": int(r["Qty"]) if pd.notna(r["Qty"]) else 1,
-                                    "materialNumber": str(r["Parts"]).strip(),
+                                    "quantity": int(row["Qty"]) if pd.notna(row["Qty"]) else 1,
+                                    "materialNumber": str(row["Parts"]).strip(),
                                     "materialTitle": "",
-                                    "units": str(r["Unit"]).strip() if pd.notna(r.get("Unit")) and str(r["Unit"]).strip() else "each",
-                                    "scan": "True" if r["Scan"] else "False",
-                                    "parentIdentifier": "True" if r["Trace"] else "False"
-                                }
+                                    "units": "each",
+                                    "scan": "True" if row["Scan"] else "False",
+                                    "parentIdentifier": "True" if row["Trace"] else "False"
+                                })
 
-                                # Add alternates
-                                alternates = []
-                                if pd.notna(r.get("Alternate 1")):
-                                    alternates.append({
-                                        "inputMaterialPMlmId": "PLM_ID",
-                                        "materialName": "",
-                                        "materialNumber": str(r["Alternate 1"]).strip(),
-                                        "materialTitle": str(r["Atl 1 Name"]).strip() if pd.notna(r.get("Atl 1 Name")) else ""
-                                    })
-                                if pd.notna(r.get("Alternate 2")):
-                                    alternates.append({
-                                        "inputMaterialPMlmId": "PLM_ID",
-                                        "materialName": "",
-                                        "materialNumber": str(r["Alternate 2"]).strip(),
-                                        "materialTitle": str(r["Alt 2 Name"]).strip() if pd.notna(r.get("Alt 2 Name")) else ""
-                                    })
+                            sample_definitions = []
 
-                                if alternates:
-                                    material["alternates"] = alternates
-
-                                materials.append(material)
-
-
-                        sample_definitions = [
-                            {
+                            # Confirm sample
+                            confirm_sample = {
                                 "instructions": "Next?",
-                                "sampleDefinitionName": meta_dict.get("lineName", "") + "Confirm",
+                                "sampleDefinitionName": "",
                                 "plmId": "PLM_ID",
                                 "sampleClass": "Confirm",
                                 "sampleQty": 1,
                                 "attributes": {
                                     "PassFail": {
-                                        "DataType": "BOOLEAN", "Required": True, "Description": "STRING", "Format": "#0.00", "Order": "1",
-                                        "MinimumValue": "", "MaximumValue": ""
+                                        "DataType": "BOOLEAN",
+                                        "Required": True,
+                                        "Description": "STRING",
+                                        "Format": "#0.00",
+                                        "Order": "1",
+                                        "MinimumValue": "NUMERIC",
+                                        "MaximumValue": "NUMERIC"
                                     }
                                 }
                             }
-                        ]
+                            sample_definitions.append(confirm_sample)
 
-
-                        if pd.notna(row.get("Tools")) and pd.notna(row.get("Pset Program Number")):
-                            tools_value = str(row["Tools"]).strip().lower()
-
-                            if tools_value == "manual entry":
-                                datatype = str(row["Pset Program Number"]).strip().upper()
-                                format_val = "#0.00" if datatype == "REAL" else "#0"
-
-                                manual_sample = {
-                                    "instructions": row["Title"],
-                                    "sampleDefinitionName": str(row["Parts"]).strip() if pd.notna(row["Parts"]) else "ManualEntry",
-                                    "plmId": "PLM_ID",
-                                    "sampleClass": "Manual Entry",
-                                    "sampleQty": int(row["Qty"]) if pd.notna(row["Qty"]) else 1,
-                                    "attributes": {
-                                        str(row["Parts"]).strip(): {
-                                            "DataType": datatype,
-                                            "Required": "True",
-                                            "Description": str(row["Parts"]).strip(),
-                                            "Format": format_val,
-                                            "Order": "1",
-                                            "MinimumValue": "",
-                                            "MaximumValue": ""
-                                        }
-                                    }
-                                }
-                                sample_definitions.append(manual_sample)
-
-                            else:
+                            # Torque sample
+                            if pd.notna(row.get("Tools")) and pd.notna(row.get("Pset Program Number")):
                                 torque_sample = {
                                     "instructions": row["Title"],
-                                    "sampleDefinitionName": meta_dict.get("lineName", "") + "Torque",
+                                    "sampleDefinitionName": "",
                                     "plmId": "PLM_ID",
                                     "toolResourceInstance": row["Tools"],
                                     "sampleClass": "Torque",
@@ -668,58 +523,86 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
                                     },
                                     "attributes": {
                                         "PassFail": {
-                                            "DataType": "BOOLEAN", "Required": True, "Description": "STRING", "Format": "#0.00", "Order": 1,
-                                            "MinimumValue": "NUMERIC", "MaximumValue": "NUMERIC"
+                                            "DataType": "BOOLEAN",
+                                            "Required": True,
+                                            "Description": "STRING",
+                                            "Format": "#0.00",
+                                            "Order": 1,
+                                            "MinimumValue": "NUMERIC",
+                                            "MaximumValue": "NUMERIC"
                                         },
                                         "Torque": {
-                                            "DataType": "REAL", "Required": True, "Description": "STRING", "Format": "#0.00", "Order": 2,
-                                            "NominalValue": "1.5", "MinimumValue": "1.3", "MaximumValue": "1.7"
+                                            "DataType": "REAL",
+                                            "Required": True,
+                                            "Description": "STRING",
+                                            "Format": "#0.00",
+                                            "Order": 2,
+                                            "NominalValue": "1.5",
+                                            "MinimumValue": "1.3",
+                                            "MaximumValue": "1.7"
                                         },
                                         "Angle": {
-                                            "DataType": "REAL", "Required": True, "Description": "STRING", "Format": "#0.00", "Order": 3,
-                                            "MinimumValue": "NUMERIC", "MaximumValue": "NUMERIC", "NominalValue": ""
+                                            "DataType": "REAL",
+                                            "Required": True,
+                                            "Description": "STRING",
+                                            "Format": "#0.00",
+                                            "Order": 3,
+                                            "MinimumValue": "NUMERIC",
+                                            "MaximumValue": "NUMERIC",
+                                            "NominalValue": ""
                                         },
                                         "PSet": {
-                                            "DataType": "INTEGER", "Required": True, "Description": "STRING", "Format": "#0.00", "Order": 4,
-                                            "MinimumValue": "", "MaximumValue": ""
+                                            "DataType": "INTEGER",
+                                            "Required": True,
+                                            "Description": "STRING",
+                                            "Format": "#0.00",
+                                            "Order": 4,
+                                            "MinimumValue": "",
+                                            "MaximumValue": ""
                                         }
                                     }
                                 }
                                 sample_definitions.append(torque_sample)
 
-                        # Build segment
-                        segment = {
-                            "segmentTitle": row["Title"],
-                            "segmentName": "",
-                            "segmentPlmId": "",
-                            "segmentSequence": 0,
-                            "operationInputMaterials": materials,
-                            "sampleDefinitions": sample_definitions,
-                        }
+                            # Build segment
+                            segment = {
+                                "segmentTitle": row["Title"],
+                                "segmentName": "",
+                                "segmentPlmId": "",
+                                "segmentSequence": 0,
+                                "operationInputMaterials": materials,
+                                "sampleDefinitions": sample_definitions,
+                            }
 
-                        # Optional customActions if Fixture is provided
-                        custom_actions = []
-                        if pd.notna(row.get("Fixture")) and str(row["Fixture"]).strip():
-                            custom_actions.append({
-                                "actionType": "Scan Fixture",
-                                "actionTarget": str(row["Fixture"]).strip(),
-                                "actionSettings": {}
-                            })
+                            # Optional customActions if Fixture is provided
+                            custom_actions = []
+                            if pd.notna(row.get("Fixture")) and str(row["Fixture"]).strip():
+                                custom_actions.append({
+                                    "actionType": "Scan Fixture",
+                                    "actionTarget": str(row["Fixture"]).strip(),
+                                    "actionSettings": {}
+                                })
 
-                        if custom_actions:
-                            segment["customActions"] = custom_actions
+                            if custom_actions:
+                                segment["customActions"] = custom_actions
 
-                        # Work instruction block
-                        segment["workInstruction"] = {
-                            "pdfLink": row["Work Instruction"] if pd.notna(row["Work Instruction"]) else "",
-                            "plmId": "PLM_ID"
-                        }
+                            # Work instruction block
+                            segment["workInstruction"] = {
+                                "pdfLink": row["Work Instruction"] if pd.notna(row["Work Instruction"]) else "",
+                                "plmId": "PLM_ID"
+                            }
 
-                        operation["operationSegments"].append(segment)
+                            operation["operationSegments"].append(segment)
 
-                metadata["operationsDefinitions"].append(operation)
+                    metadata["operationsDefinitions"].append(operation)
 
-                output_path = os.path.join(output_dir, f"{sheet_name.strip()}.json")
+                # Create filename with line name
+                if line_name:
+                    filename = f"{sheet_name.strip()}_{line_name}.json"
+                else:
+                    filename = f"{sheet_name.strip()}.json"
+                
+                output_path = os.path.join(output_dir, filename)
                 with open(output_path, "w", encoding="utf-8") as f:
                     json.dump(convert_bools(metadata), f, indent=2)
                 generated_files.append(output_path)

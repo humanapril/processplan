@@ -60,9 +60,7 @@ def convert_bools(obj):
 for filename in os.listdir(input_dir):
     if filename.endswith(".xlsx"):
         xlsx_path = os.path.join(input_dir, filename)
-        json_filename = os.path.splitext(filename)[0] + ".json"
-        output_path = os.path.join(output_dir, json_filename)
-
+        
         # Load Excel
         df = pd.read_excel(xlsx_path, header=None)
 
@@ -75,158 +73,176 @@ for filename in os.listdir(input_dir):
             }
         }
 
-        metadata = {
-            "scopeMaterialNumber": meta_dict.get("scopeMaterialNumber", ""),
-            "scopeMaterialTitle": meta_dict.get("scopeMaterialTitle", ""),
-            "scopeMaterialPlmId": meta_dict.get("scopeMaterialPlmId", "00000010"),
-            "areaName": meta_dict.get("areaName", ""),
-            "lineName": meta_dict.get("lineName", ""),
-            "operationsDefinitions": []
-        }
+        # Get line names and split by semicolon
+        line_names_raw = meta_dict.get("lineName", "")
+        line_names = [name.strip() for name in line_names_raw.split(';') if name.strip()]
 
-        # Table setup
-        table_start_row = 8
-        headers = df.iloc[7, 1:].astype(str).str.strip().tolist()
-        data_df = df.iloc[table_start_row:, 1:1+len(headers)]
-        data_df.columns = headers
+        # If no line names found, use a default
+        if not line_names:
+            line_names = [""]
 
-        # Clean data
-        data_df["Station"] = data_df["Station"].ffill()
-        data_df["Step"] = data_df["Step"].fillna("").astype(str).str.zfill(3)
-        data_df["Scan"] = data_df["Scan"].astype(str).str.strip().str.lower().map(lambda x: True if x == "true" else False)
-        data_df["Trace"] = data_df["Trace"].astype(str).str.strip().str.lower().map(lambda x: True if x == "true" else False)
-
-        # Build operations
-        for station, group in data_df.groupby("Station"):
-            station_int = int(station)
-            station_str = f"{station_int:03}"
-
-            op_row = group[group["Step"] == "000"]
-            operation_title = op_row["Title"].values[0] if not op_row.empty else f"Station {station_str}"
-
-            operation = {
-                "operationTitle": operation_title,
-                "operationName": "",
-                "operationPlmId": "",
-                "workstationName": f"S{station_str}",
-                "operationSegments": []
+        # Create a JSON file for each line name
+        for line_name in line_names:
+            metadata = {
+                "scopeMaterialNumber": meta_dict.get("scopeMaterialNumber", ""),
+                "scopeMaterialTitle": meta_dict.get("scopeMaterialTitle", ""),
+                "scopeMaterialPlmId": meta_dict.get("scopeMaterialPlmId", "00000010"),
+                "areaName": meta_dict.get("areaName", ""),
+                "lineName": line_name,
+                "operationsDefinitions": []
             }
 
-            if not op_row.empty and any(keyword in str(operation_title) for keyword in ["EOL", "Test", "test"]):
-                operation["operationSegments"].append(predefined_segment)
-            else:
-                step_rows = group[group["Step"] != "000"]
-                for _, row in step_rows.iterrows():
-                    materials = []
-                    if pd.notna(row.get("Parts")):
-                        materials.append({
-                            "inputMaterialPMlmId": "PLM_ID",
-                            "materialName": "",
-                            "quantity": int(row["Qty"]) if pd.notna(row["Qty"]) else 1,
-                            "materialNumber": str(row["Parts"]).strip(),
-                            "materialTitle": "",
-                            "units": "each",
-                            "scan": "True" if row["Scan"] else "False",
-                            "parentIdentifier": "True" if row["Trace"] else "False"
-                        })
+            # Table setup
+            table_start_row = 8
+            headers = df.iloc[7, 1:].astype(str).str.strip().tolist()
+            data_df = df.iloc[table_start_row:, 1:1+len(headers)]
+            data_df.columns = headers
 
-                    segment = {
-                        "segmentTitle": row["Title"],
-                        "segmentName": "",
-                        "segmentPlmId": "",
-                        "segmentSequence": 0,
-                        "operationInputMaterials": materials,
-                        "sampleDefinitions": [],
-                        "workInstruction": {
-                            "pdfLink": row["Work Instruction"] if pd.notna(row["Work Instruction"]) else "",
-                            "plmId": "PLM_ID"
-                        }
-                    }
+            # Clean data
+            data_df["Station"] = data_df["Station"].ffill()
+            data_df["Step"] = data_df["Step"].fillna("").astype(str).str.zfill(3)
+            data_df["Scan"] = data_df["Scan"].astype(str).str.strip().str.lower().map(lambda x: True if x == "true" else False)
+            data_df["Trace"] = data_df["Trace"].astype(str).str.strip().str.lower().map(lambda x: True if x == "true" else False)
 
-                    # Confirm sample
-                    confirm_sample = {
-                        "instructions": "Next?",
-                        "sampleDefinitionName": "",
-                        "plmId": "PLM_ID",
-                        "sampleClass": "Confirm",
-                        "sampleQty": 1,
-                        "attributes": {
-                            "PassFail": {
-                                "DataType": "BOOLEAN",
-                                "Required": True,
-                                "Description": "STRING",
-                                "Format": "#0.00",
-                                "Order": "1",
-                                "MinimumValue": "NUMERIC",
-                                "MaximumValue": "NUMERIC"
+            # Build operations
+            for station, group in data_df.groupby("Station"):
+                station_int = int(station)
+                station_str = f"{station_int:03}"
+
+                op_row = group[group["Step"] == "000"]
+                operation_title = op_row["Title"].values[0] if not op_row.empty else f"Station {station_str}"
+
+                operation = {
+                    "operationTitle": operation_title,
+                    "operationName": "",
+                    "operationPlmId": "",
+                    "workstationName": f"S{station_str}",
+                    "operationSegments": []
+                }
+
+                if not op_row.empty and any(keyword in str(operation_title) for keyword in ["EOL", "Test", "test"]):
+                    operation["operationSegments"].append(predefined_segment)
+                else:
+                    step_rows = group[group["Step"] != "000"]
+                    for _, row in step_rows.iterrows():
+                        materials = []
+                        if pd.notna(row.get("Parts")):
+                            materials.append({
+                                "inputMaterialPMlmId": "PLM_ID",
+                                "materialName": "",
+                                "quantity": int(row["Qty"]) if pd.notna(row["Qty"]) else 1,
+                                "materialNumber": str(row["Parts"]).strip(),
+                                "materialTitle": "",
+                                "units": "each",
+                                "scan": "True" if row["Scan"] else "False",
+                                "parentIdentifier": "True" if row["Trace"] else "False"
+                            })
+
+                        segment = {
+                            "segmentTitle": row["Title"],
+                            "segmentName": "",
+                            "segmentPlmId": "",
+                            "segmentSequence": 0,
+                            "operationInputMaterials": materials,
+                            "sampleDefinitions": [],
+                            "workInstruction": {
+                                "pdfLink": row["Work Instruction"] if pd.notna(row["Work Instruction"]) else "",
+                                "plmId": "PLM_ID"
                             }
                         }
-                    }
-                    segment["sampleDefinitions"].append(confirm_sample)
 
-                    # Torque sample
-                    if pd.notna(row.get("Tools")) and pd.notna(row.get("Pset Program Number")):
-                        torque_sample = {
-                            "instructions": row["Title"],
+                        # Confirm sample
+                        confirm_sample = {
+                            "instructions": "Next?",
                             "sampleDefinitionName": "",
                             "plmId": "PLM_ID",
-                            "toolResourceInstance": row["Tools"],
-                            "sampleClass": "Torque",
-                            "sampleQty": int(row["Qty"]) if pd.notna(row["Qty"]) else 1,
-                            "settings": {
-                                "pSet": str(row["Pset Program Number"])
-                            },
+                            "sampleClass": "Confirm",
+                            "sampleQty": 1,
                             "attributes": {
                                 "PassFail": {
                                     "DataType": "BOOLEAN",
                                     "Required": True,
                                     "Description": "STRING",
                                     "Format": "#0.00",
-                                    "Order": 1,
+                                    "Order": "1",
                                     "MinimumValue": "NUMERIC",
                                     "MaximumValue": "NUMERIC"
-                                },
-                                "Torque": {
-                                    "DataType": "REAL",
-                                    "Required": True,
-                                    "Description": "STRING",
-                                    "Format": "#0.00",
-                                    "Order": 2,
-                                    "NominalValue": "1.5",
-                                    "MinimumValue": "1.3",
-                                    "MaximumValue": "1.7"
-                                },
-                                "Angle": {
-                                    "DataType": "REAL",
-                                    "Required": True,
-                                    "Description": "STRING",
-                                    "Format": "#0.00",
-                                    "Order": 3,
-                                    "MinimumValue": "NUMERIC",
-                                    "MaximumValue": "NUMERIC",
-                                    "NominalValue": ""
-                                },
-                                "PSet": {
-                                    "DataType": "INTEGER",
-                                    "Required": "True",
-                                    "Description": "STRING",
-                                    "Format": "#0.00",
-                                    "Order": 4,
-                                    "MinimumValue": "",
-                                    "MaximumValue": ""
                                 }
                             }
                         }
-                        segment["sampleDefinitions"].append(torque_sample)
+                        segment["sampleDefinitions"].append(confirm_sample)
 
-                    operation["operationSegments"].append(segment)
+                        # Torque sample
+                        if pd.notna(row.get("Tools")) and pd.notna(row.get("Pset Program Number")):
+                            torque_sample = {
+                                "instructions": row["Title"],
+                                "sampleDefinitionName": "",
+                                "plmId": "PLM_ID",
+                                "toolResourceInstance": row["Tools"],
+                                "sampleClass": "Torque",
+                                "sampleQty": int(row["Qty"]) if pd.notna(row["Qty"]) else 1,
+                                "settings": {
+                                    "pSet": str(row["Pset Program Number"])
+                                },
+                                "attributes": {
+                                    "PassFail": {
+                                        "DataType": "BOOLEAN",
+                                        "Required": True,
+                                        "Description": "STRING",
+                                        "Format": "#0.00",
+                                        "Order": 1,
+                                        "MinimumValue": "NUMERIC",
+                                        "MaximumValue": "NUMERIC"
+                                    },
+                                    "Torque": {
+                                        "DataType": "REAL",
+                                        "Required": True,
+                                        "Description": "STRING",
+                                        "Format": "#0.00",
+                                        "Order": 2,
+                                        "NominalValue": "1.5",
+                                        "MinimumValue": "1.3",
+                                        "MaximumValue": "1.7"
+                                    },
+                                    "Angle": {
+                                        "DataType": "REAL",
+                                        "Required": True,
+                                        "Description": "STRING",
+                                        "Format": "#0.00",
+                                        "Order": 3,
+                                        "MinimumValue": "NUMERIC",
+                                        "MaximumValue": "NUMERIC",
+                                        "NominalValue": ""
+                                    },
+                                    "PSet": {
+                                        "DataType": "INTEGER",
+                                        "Required": "True",
+                                        "Description": "STRING",
+                                        "Format": "#0.00",
+                                        "Order": 4,
+                                        "MinimumValue": "",
+                                        "MaximumValue": ""
+                                    }
+                                }
+                            }
+                            segment["sampleDefinitions"].append(torque_sample)
 
-            metadata["operationsDefinitions"].append(operation)
+                        operation["operationSegments"].append(segment)
 
-        # Convert all booleans to "True"/"False" strings before saving
-        clean_metadata = convert_bools(metadata)
+                metadata["operationsDefinitions"].append(operation)
 
-        with open(output_path, "w") as f:
-            json.dump(clean_metadata, f, indent=4)
+            # Convert all booleans to "True"/"False" strings before saving
+            clean_metadata = convert_bools(metadata)
 
-        print(f"✅ JSON generated: {output_path}")
+            # Create filename with line name
+            if line_name:
+                json_filename = os.path.splitext(filename)[0] + "_" + line_name + ".json"
+            else:
+                json_filename = os.path.splitext(filename)[0] + ".json"
+            
+            output_path = os.path.join(output_dir, json_filename)
+
+            with open(output_path, "w") as f:
+                json.dump(clean_metadata, f, indent=4)
+
+            print(f"✅ JSON generated: {output_path}")
