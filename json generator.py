@@ -123,30 +123,37 @@ for filename in os.listdir(input_dir):
                 if not op_row.empty and any(keyword in str(operation_title) for keyword in ["EOL", "Test", "test"]):
                     operation["operationSegments"].append(predefined_segment)
                 else:
-                    step_rows = group[group["Step"] != "000"]
-                    for _, row in step_rows.iterrows():
+                    step_groups = group[group["Step"] != "000"].groupby("Step")
+                    
+                    for step, step_rows in step_groups:
                         materials = []
-                        if pd.notna(row.get("Parts")):
-                            materials.append({
-                                "inputMaterialPMlmId": "PLM_ID",
-                                "materialName": "",
-                                "quantity": int(row["Qty"]) if pd.notna(row["Qty"]) else 1,
-                                "materialNumber": str(row["Parts"]).strip(),
-                                "materialTitle": "",
-                                "units": "each",
-                                "scan": "True" if row["Scan"] else "False",
-                                "parentIdentifier": "True" if row["Trace"] else "False"
-                            })
+                        
+                        # Process all rows for this step to collect materials
+                        for _, row in step_rows.iterrows():
+                            if pd.notna(row.get("Parts")):
+                                materials.append({
+                                    "inputMaterialPMlmId": "PLM_ID",
+                                    "materialName": "",
+                                    "quantity": int(row["Qty"]) if pd.notna(row["Qty"]) else 1,
+                                    "materialNumber": str(row["Parts"]).strip(),
+                                    "materialTitle": "",
+                                    "units": "each",
+                                    "scan": "True" if row["Scan"] else "False",
+                                    "parentIdentifier": "True" if row["Trace"] else "False"
+                                })
+
+                        # Use the first row for segment details
+                        first_row = step_rows.iloc[0]
 
                         segment = {
-                            "segmentTitle": row["Title"],
+                            "segmentTitle": first_row["Title"],
                             "segmentName": "",
                             "segmentPlmId": "",
                             "segmentSequence": 0,
                             "operationInputMaterials": materials,
                             "sampleDefinitions": [],
                             "workInstruction": {
-                                "pdfLink": row["Work Instruction"] if pd.notna(row["Work Instruction"]) else "",
+                                "pdfLink": first_row["Work Instruction"] if pd.notna(first_row["Work Instruction"]) else "",
                                 "plmId": "PLM_ID"
                             }
                         }
@@ -173,16 +180,16 @@ for filename in os.listdir(input_dir):
                         segment["sampleDefinitions"].append(confirm_sample)
 
                         # Torque sample
-                        if pd.notna(row.get("Tools")) and pd.notna(row.get("Pset Program Number")):
+                        if pd.notna(first_row.get("Tools")) and pd.notna(first_row.get("Pset Program Number")):
                             torque_sample = {
-                                "instructions": row["Title"],
+                                "instructions": first_row["Title"],
                                 "sampleDefinitionName": line_name + "Torque" if line_name else "",
                                 "plmId": "PLM_ID",
-                                "toolResourceInstance": row["Tools"],
+                                "toolResourceInstance": first_row["Tools"],
                                 "sampleClass": "Torque",
-                                "sampleQty": int(row["Qty"]) if pd.notna(row["Qty"]) else 1,
+                                "sampleQty": int(first_row["Qty"]) if pd.notna(first_row["Qty"]) else 1,
                                 "settings": {
-                                    "pSet": str(row["Pset Program Number"])
+                                    "pSet": str(first_row["Pset Program Number"])
                                 },
                                 "attributes": {
                                     "PassFail": {
