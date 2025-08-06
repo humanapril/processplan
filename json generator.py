@@ -154,7 +154,7 @@ for filename in os.listdir(input_dir):
                         # Confirm sample
                         confirm_sample = {
                             "instructions": "Next?",
-                            "sampleDefinitionName": "",
+                            "sampleDefinitionName": line_name + "Confirm" if line_name else "",
                             "plmId": "PLM_ID",
                             "sampleClass": "Confirm",
                             "sampleQty": 1,
@@ -165,8 +165,8 @@ for filename in os.listdir(input_dir):
                                     "Description": "STRING",
                                     "Format": "#0.00",
                                     "Order": "1",
-                                    "MinimumValue": "NUMERIC",
-                                    "MaximumValue": "NUMERIC"
+                                    "MinimumValue": "",
+                                    "MaximumValue": ""
                                 }
                             }
                         }
@@ -176,7 +176,7 @@ for filename in os.listdir(input_dir):
                         if pd.notna(row.get("Tools")) and pd.notna(row.get("Pset Program Number")):
                             torque_sample = {
                                 "instructions": row["Title"],
-                                "sampleDefinitionName": "",
+                                "sampleDefinitionName": line_name + "Torque" if line_name else "",
                                 "plmId": "PLM_ID",
                                 "toolResourceInstance": row["Tools"],
                                 "sampleClass": "Torque",
@@ -191,8 +191,8 @@ for filename in os.listdir(input_dir):
                                         "Description": "STRING",
                                         "Format": "#0.00",
                                         "Order": 1,
-                                        "MinimumValue": "NUMERIC",
-                                        "MaximumValue": "NUMERIC"
+                                        "MinimumValue": "",
+                                        "MaximumValue": ""
                                     },
                                     "Torque": {
                                         "DataType": "REAL",
@@ -210,8 +210,8 @@ for filename in os.listdir(input_dir):
                                         "Description": "STRING",
                                         "Format": "#0.00",
                                         "Order": 3,
-                                        "MinimumValue": "NUMERIC",
-                                        "MaximumValue": "NUMERIC",
+                                        "MinimumValue": "",
+                                        "MaximumValue": "",
                                         "NominalValue": ""
                                     },
                                     "PSet": {
