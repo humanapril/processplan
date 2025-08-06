@@ -17,14 +17,27 @@ import io
 from dotenv import load_dotenv
 from zoneinfo import ZoneInfo
 from flask import flash, redirect, url_for
-load_dotenv()
+import logging
+from config import config
+from validators import ValidationError, validate_excel_file, validate_json_data, sanitize_filename, validate_line_names
+
+# Setup logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
 # === App Setup ===
 app = Flask(__name__, template_folder="templates", static_folder="static")
 CORS(app)
 
-app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  # 100 MB
-app.config['SQLALCHEMY_DATABASE_URI'] = f"postgresql://{os.getenv('DB_USER')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}:{os.getenv('DB_PORT')}/{os.getenv('DB_NAME')}"
-app.config['SECRET_KEY'] = 'supersecretkey'
+# Apply configuration
+app.config['MAX_CONTENT_LENGTH'] = config.MAX_CONTENT_LENGTH
+app.config['SQLALCHEMY_DATABASE_URI'] = config.SQLALCHEMY_DATABASE_URI
+app.config['SECRET_KEY'] = config.SECRET_KEY
+app.config['DEBUG'] = config.DEBUG
+
 db = SQLAlchemy(app)
 bcrypt = Bcrypt(app)
 
@@ -55,7 +68,7 @@ def localtime_filter(utc_dt):
 class User(db.Model, UserMixin):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(255), unique=True, nullable=False)
+    email = db.Column(db.String(255), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.Text, nullable=False)
     first_name = db.Column(db.String(100))
     last_name = db.Column(db.String(100))
@@ -79,97 +92,136 @@ def convert_bools(obj):
         return "True" if obj else "False"
     return obj
 
+def create_predefined_segment(line_name: str, station_str: str) -> dict:
+    """Create predefined EOL testing segment with proper attributes"""
+    return {
+        "segmentTitle": "EOL Testing",
+        "segmentName": "",
+        "segmentPlmId": "",
+        "segmentSequence": 0,
+        "operationInputMaterials": [],
+        "sampleDefinitions": [                
+            {
+                "instructions": "Place the part on the tester device",
+                "sampleDefinitionName": line_name + "_" + station_str + "_Test",
+                "plmId": "PLM_ID",
+                "sampleClass": "EOL_Tester",
+                "toolResourceInstance": "EOL_Tester_1",
+                "sampleQty": 1,
+                "settings": {"Configuration N/L/R": "N"},
+                "attributes": config.EOL_TEST_ATTRIBUTES
+            }
+        ],
+        "workInstruction": {
+            "plmId": "PLM_ID",
+            "pdfLink": ""
+        }
+    }
+
 # === Registration ===
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        email = request.form['email']
-        password = request.form['password']
-        first_name = request.form['first_name']
-        last_name = request.form['last_name']
+        try:
+            email = request.form['email']
+            password = request.form['password']
+            first_name = request.form['first_name']
+            last_name = request.form['last_name']
 
-        if User.query.filter_by(email=email).first():
-            return "Email already exists.", 400
+            if User.query.filter_by(email=email).first():
+                return "Email already exists.", 400
 
-        hashed_pw = bcrypt.generate_password_hash(password).decode('utf-8')
+            hashed_pw = bcrypt.generate_password_hash(password).decode('utf-8')
 
-        new_user = User(
-            email=email,
-            password_hash=hashed_pw,
-            first_name=first_name,
-            last_name=last_name,
-            role='pending',
-            is_approved=False
-        )
+            new_user = User(
+                email=email,
+                password_hash=hashed_pw,
+                first_name=first_name,
+                last_name=last_name,
+                role='pending',
+                is_approved=False
+            )
 
-        db.session.add(new_user)
-        db.session.commit()
-
-        return "Account request submitted. Await admin approval."
+            db.session.add(new_user)
+            db.session.commit()
+            
+            logger.info(f"New user registered: {email}")
+            return "Account request submitted. Await admin approval."
+            
+        except Exception as e:
+            logger.error(f"Error during registration: {e}")
+            return "Registration failed. Please try again.", 500
 
     return render_template('register.html')
-
 
 # === Login ===
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        email = request.form['email']
-        password = request.form['password']
-        user = User.query.filter_by(email=email).first()
+        try:
+            email = request.form['email']
+            password = request.form['password']
+            user = User.query.filter_by(email=email).first()
 
-        if user and user.check_password(password):
-            if not user.is_approved:
-                flash("Account is pending admin approval.", "error")
+            if user and user.check_password(password):
+                if not user.is_approved:
+                    flash("Account is pending admin approval.", "error")
+                    return redirect(url_for('login'))
+                login_user(user)
+                logger.info(f"User logged in: {email}")
+                return redirect(url_for('index'))
+            else:
+                flash("Invalid email or password.", "error")
                 return redirect(url_for('login'))
-            login_user(user)
-            return redirect(url_for('index'))
-        else:
-            flash("Invalid email or password.", "error")
+                
+        except Exception as e:
+            logger.error(f"Error during login: {e}")
+            flash("Login failed. Please try again.", "error")
             return redirect(url_for('login'))
 
     return render_template('login.html')
-
 
 # === Logout ===
 @app.route('/logout')
 @login_required
 def logout():
+    logger.info(f"User logged out: {current_user.email}")
     logout_user()
-    return redirect('/login')
+    return redirect(url_for('login'))
 
-# === Admin: Approve or Deny Users ===
+# === Admin Approve ===
 @app.route('/admin/approve', methods=['GET', 'POST'])
 @login_required
 def admin_approve():
     if current_user.role != 'admin':
-        flash("Access denied. Admins only.", "error")
-        return redirect(url_for('index'))
+        return "Access denied.", 403
 
     if request.method == 'POST':
-        action = request.form.get('action')
-        user_id = request.form.get('user_id')
-        user = User.query.get(user_id)
+        try:
+            user_id = request.form.get('user_id')
+            action = request.form.get('action')
+            
+            user = User.query.get(user_id)
+            if not user:
+                return "User not found.", 404
 
-        if not user:
-            flash("User not found.", "error")
-        elif action == 'approve':
-            user.is_approved = True
-            user.role = 'user'
-            db.session.commit()
-            flash(f"Approved {user.email}.", "success")
-        elif action == 'deny':
-            db.session.delete(user)
-            db.session.commit()
-            flash(f"Denied and removed {user.email}.", "warning")
-        else:
-            flash("Invalid action.", "error")
+            if action == 'approve':
+                user.is_approved = True
+                user.role = 'user'
+                logger.info(f"User approved: {user.email}")
+            elif action == 'reject':
+                db.session.delete(user)
+                logger.info(f"User rejected: {user.email}")
 
-        return redirect(url_for('admin_approve'))
+            db.session.commit()
+            return redirect(url_for('admin_approve'))
+            
+        except Exception as e:
+            logger.error(f"Error during admin approval: {e}")
+            return "Approval failed. Please try again.", 500
 
     pending_users = User.query.filter_by(is_approved=False).all()
     return render_template('approve_users.html', users=pending_users)
-
 
 # === Home / Index ===
 @app.route('/', methods=['GET', 'POST'])
@@ -179,95 +231,118 @@ def index():
         form_type = request.form.get('form_type')
 
         if form_type == 'json':
-            file = request.files.get('file')
-            material = request.form.get('material')
+            try:
+                file = request.files.get('file')
+                material = request.form.get('material')
 
-            if not file or not file.filename.endswith('.xlsx'):
-                return "Please upload a valid .xlsx file.", 400
+                if not file or not file.filename.endswith('.xlsx'):
+                    return "Please upload a valid .xlsx file.", 400
 
-            with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as temp_input:
-                file.save(temp_input.name)
-                with tempfile.TemporaryDirectory() as temp_output_dir:
-                    json_files = process_excel_sheets_to_jsons(temp_input.name, temp_output_dir)
-                    if not json_files:
-                        return "No valid sheets found in the Excel file.", 400
+                # Validate material selection
+                if material not in config.MATERIAL_LIST:
+                    return "Invalid material selection.", 400
 
-                    zip_path = os.path.join(temp_output_dir, f"{material}_jsons.zip")
-                    with zipfile.ZipFile(zip_path, 'w') as zipf:
-                        for jf in json_files:
-                            zipf.write(jf, os.path.basename(jf))
-                    return send_file(zip_path, as_attachment=True, download_name=f"{material}_jsons.zip")
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as temp_input:
+                    file.save(temp_input.name)
+                    with tempfile.TemporaryDirectory() as temp_output_dir:
+                        json_files = process_excel_sheets_to_jsons(temp_input.name, temp_output_dir)
+                        if not json_files:
+                            return "No valid sheets found in the Excel file.", 400
+
+                        zip_path = os.path.join(temp_output_dir, f"{material}_jsons.zip")
+                        with zipfile.ZipFile(zip_path, 'w') as zipf:
+                            for jf in json_files:
+                                zipf.write(jf, os.path.basename(jf))
+                        return send_file(zip_path, as_attachment=True, download_name=f"{material}_jsons.zip")
+                        
+            except ValidationError as e:
+                logger.warning(f"Validation error in JSON generation: {e}")
+                return str(e), 400
+            except Exception as e:
+                logger.error(f"Error in JSON generation: {e}")
+                return "Error processing Excel file. Please check the file format.", 500
 
         elif form_type == 'pdf':
-            uploaded_files = request.files.getlist('pdf_files')
-            with tempfile.TemporaryDirectory() as temp_output_dir:
-                for file in uploaded_files:
-                    if file and file.filename.lower().endswith(".pdf"):
-                        filename = secure_filename(file.filename)
-                        base_name = os.path.splitext(filename)[0]
-                        pdf_path = os.path.join(temp_output_dir, filename)
-                        file.save(pdf_path)
+            try:
+                uploaded_files = request.files.getlist('pdf_files')
+                with tempfile.TemporaryDirectory() as temp_output_dir:
+                    for file in uploaded_files:
+                        if file and file.filename.lower().endswith(".pdf"):
+                            filename = sanitize_filename(file.filename)
+                            base_name = os.path.splitext(filename)[0]
+                            pdf_path = os.path.join(temp_output_dir, filename)
+                            file.save(pdf_path)
 
-                        subfolder = os.path.join(temp_output_dir, base_name)
-                        os.makedirs(subfolder, exist_ok=True)
+                            subfolder = os.path.join(temp_output_dir, base_name)
+                            os.makedirs(subfolder, exist_ok=True)
 
-                        reader = PdfReader(pdf_path)
-                        for i in range(1, len(reader.pages)):
-                            writer = PdfWriter()
-                            writer.add_page(reader.pages[i])
-                            output_name = f"{base_name}-{(i)*10:03}.pdf"
-                            output_path = os.path.join(subfolder, output_name)
-                            with open(output_path, "wb") as f_out:
-                                writer.write(f_out)
+                            reader = PdfReader(pdf_path)
+                            for i in range(1, len(reader.pages)):
+                                writer = PdfWriter()
+                                writer.add_page(reader.pages[i])
+                                output_name = f"{base_name}-{(i)*10:03}.pdf"
+                                output_path = os.path.join(subfolder, output_name)
+                                with open(output_path, "wb") as f_out:
+                                    writer.write(f_out)
 
-                zip_path = os.path.join(temp_output_dir, "split_pdfs.zip")
-                with zipfile.ZipFile(zip_path, 'w') as zipf:
-                    for root, _, files in os.walk(temp_output_dir):
-                        for file in files:
-                            full_path = os.path.join(root, file)
-                            if full_path != zip_path:
-                                arcname = os.path.relpath(full_path, temp_output_dir)
-                                zipf.write(full_path, arcname)
+                    zip_path = os.path.join(temp_output_dir, "split_pdfs.zip")
+                    with zipfile.ZipFile(zip_path, 'w') as zipf:
+                        for root, _, files in os.walk(temp_output_dir):
+                            for file in files:
+                                full_path = os.path.join(root, file)
+                                if full_path != zip_path:
+                                    arcname = os.path.relpath(full_path, temp_output_dir)
+                                    zipf.write(full_path, arcname)
 
-                return send_file(zip_path, as_attachment=True, download_name="split_pdfs.zip")
+                    return send_file(zip_path, as_attachment=True, download_name="split_pdfs.zip")
+                    
+            except Exception as e:
+                logger.error(f"Error in PDF processing: {e}")
+                return "Error processing PDF files.", 500
 
     # Pass current_user into the template to show admin options if needed
-    return render_template("index.html", materials=MATERIAL_LIST, current_user=current_user)
+    return render_template("index.html", materials=config.MATERIAL_LIST, current_user=current_user)
 
 
 # === JSON Import Route ===
-
-
 @app.route('/import', methods=['POST'])
 @login_required
 def import_single_json():
-    file = request.files.get('json_file')
-    revision_note = request.form.get('revision_note', '').strip()
-    if not file or not file.filename.endswith('.json'):
-        print("❌ Invalid file uploaded or missing")
-        return jsonify({"error": "Invalid file type."}), 400
-
     try:
+        file = request.files.get('json_file')
+        revision_note = request.form.get('revision_note', '').strip()
+        
+        if not file or not file.filename.endswith('.json'):
+            logger.warning("Invalid file uploaded or missing")
+            return jsonify({"error": "Invalid file type."}), 400
+
+        # Validate and sanitize filename
+        filename = sanitize_filename(file.filename)
+        
         raw_data = file.read()
         data = json.loads(raw_data.decode('utf-8'))
-        print("📤 Posting to MES with payload:")
-        print(json.dumps(data, indent=2)[:1000])  # Log first 1000 chars for safety
+        
+        # Validate JSON data structure
+        validate_json_data(data)
+        
+        logger.info(f"Posting to MES with payload from {filename}")
+        logger.debug(f"Payload preview: {json.dumps(data, indent=2)[:1000]}")
 
         response = requests.post(
-            "https://mes.dev.figure.ai:60088/system/webdev/BotQ-MES/Operations/OperationsRouteManual",
+            config.MES_API_URL,
             json=data,
-            auth=HTTPBasicAuth('figure', 'figure'),
+            auth=HTTPBasicAuth(config.MES_USERNAME, config.MES_PASSWORD),
             headers={"Content-Type": "application/json"},
-            timeout=600
+            timeout=config.TIMEOUT_SECONDS
         )
 
-        print(f"✅ MES Response: {response.status_code}")
-        print(response.text[:1000])  # Only first 1000 chars
+        logger.info(f"MES Response: {response.status_code}")
+        logger.debug(f"Response preview: {response.text[:1000]}")
 
         # Save to DB
         history = ProcessPlanHistory(
             user_email=current_user.email,
-            uploaded_filename=file.filename,
+            uploaded_filename=filename,
             revision_note=revision_note,
             status_code=str(response.status_code),
             response_summary=response.text[:1000],
@@ -275,405 +350,295 @@ def import_single_json():
         )
         db.session.add(history)
         db.session.commit()
+        
+        logger.info(f"Successfully imported JSON: {filename}")
 
         return jsonify({
-            "filename": file.filename,
+            "filename": filename,
             "status_code": response.status_code,
             "response": response.text[:1000]
         })
 
+    except ValidationError as e:
+        logger.warning(f"Validation error during import: {e}")
+        return jsonify({"error": str(e)}), 400
+    except json.JSONDecodeError as e:
+        logger.error(f"Invalid JSON format: {e}")
+        return jsonify({"error": "Invalid JSON format."}), 400
+    except requests.exceptions.Timeout:
+        logger.error("MES API request timed out")
+        return jsonify({"error": "Request timed out. Please try again."}), 408
+    except requests.exceptions.RequestException as e:
+        logger.error(f"MES API request failed: {e}")
+        return jsonify({"error": "Failed to connect to MES API."}), 503
     except Exception as e:
-        print("❌ Exception occurred during /import:")
+        logger.error(f"Exception occurred during import: {e}")
         import traceback
-        traceback.print_exc()  # Logs full stack trace
+        traceback.print_exc()
         return jsonify({
             "filename": file.filename if file else "N/A",
             "status_code": "Error",
             "response": str(e)
-        })
-
-def convert_bools(obj):
-    if isinstance(obj, dict):
-        return {k: convert_bools(v) for k, v in obj.items()}
-    elif isinstance(obj, list):
-        return [convert_bools(item) for item in obj]
-    elif isinstance(obj, bool):
-        return str(obj)
-    return obj
+        }), 500
 
 def process_excel_sheets_to_jsons(excel_file_path, output_dir):
-    xl = pd.ExcelFile(excel_file_path)
-    generated_files = []
+    """
+    Process Excel file and generate JSON files for each sheet and line name
+    
+    Args:
+        excel_file_path: Path to the Excel file
+        output_dir: Directory to save generated JSON files
+        
+    Returns:
+        List of generated JSON file paths
+        
+    Raises:
+        ValidationError: If Excel file is invalid
+        RuntimeError: If processing fails
+    """
+    logger.info(f"Processing Excel file: {excel_file_path}")
+    
+    try:
+        # Validate Excel file
+        validate_excel_file(excel_file_path)
+        
+        xl = pd.ExcelFile(excel_file_path)
+        generated_files = []
 
-    for sheet_name in xl.sheet_names:
-        try:
-            df = xl.parse(sheet_name, header=None)
-            if df.empty:
-                continue
+        for sheet_name in xl.sheet_names:
+            try:
+                logger.info(f"Processing sheet: {sheet_name}")
+                
+                df = xl.parse(sheet_name, header=None)
+                if df.empty:
+                    logger.warning(f"Sheet '{sheet_name}' is empty, skipping")
+                    continue
 
-            meta_dict = {
-                str(df.iloc[i, 3]).strip(): str(df.iloc[i, 4]).strip()
-                for i in range(5)
-                if pd.notna(df.iloc[i, 3]) and str(df.iloc[i, 3]).strip() in {
-                    "scopeMaterialNumber", "scopeMaterialTitle", "scopeMaterialPlmId", "areaName", "lineName"
+                # Extract metadata using configuration
+                meta_dict = {
+                    str(df.iloc[i, config.EXCEL_CONFIG['META_COL_NAME']]).strip(): 
+                    str(df.iloc[i, config.EXCEL_CONFIG['META_COL_VALUE']]).strip()
+                    for i in range(config.EXCEL_CONFIG['META_ROWS'])
+                    if pd.notna(df.iloc[i, config.EXCEL_CONFIG['META_COL_NAME']]) and 
+                    str(df.iloc[i, config.EXCEL_CONFIG['META_COL_NAME']]).strip() in config.EXCEL_CONFIG['REQUIRED_META_FIELDS']
                 }
-            }
 
-            # Get line names and split by semicolon
-            line_names_raw = meta_dict.get("lineName", "")
-            line_names = [name.strip() for name in line_names_raw.split(';') if name.strip()]
+                # Get line names and split by semicolon
+                line_names_raw = meta_dict.get("lineName", "")
+                line_names = [name.strip() for name in line_names_raw.split(';') if name.strip()]
 
-            # If no line names found, use a default
-            if not line_names:
-                line_names = [""]
+                # Validate line names
+                if line_names:
+                    validate_line_names(line_names)
+                else:
+                    line_names = [""]
 
-            # Create a JSON file for each line name
-            for line_name in line_names:
-                metadata = {
-                    "scopeMaterialNumber": meta_dict.get("scopeMaterialNumber", ""),
-                    "scopeMaterialTitle": meta_dict.get("scopeMaterialTitle", ""),
-                    "scopeMaterialPlmId": meta_dict.get("scopeMaterialPlmId", "00000010"),
-                    "areaName": meta_dict.get("areaName", ""),
-                    "lineName": line_name,
-                    "operationsDefinitions": []
-                }
-
-                headers = df.iloc[7, 1:].astype(str).str.strip().tolist()
-                data_df = df.iloc[8:, 1:1+len(headers)]
-                data_df.columns = headers
-
-                data_df["Station"] = data_df["Station"].ffill().infer_objects(copy=False)
-                data_df["Step"] = data_df["Step"].fillna("").astype(str).str.zfill(3)
-                data_df["Scan"] = data_df["Scan"].astype(str).str.lower().eq("true")
-                data_df["Trace"] = data_df["Trace"].astype(str).str.lower().eq("true")
-
-                for station, group in data_df.groupby("Station"):
-                    station_int = int(station)
-                    station_str = f"{station_int:03}"
-
-                    predefined_segment = {
-                        "segmentTitle": "EOL Testing",
-                        "segmentName": "",
-                        "segmentPlmId": "",
-                        "segmentSequence": 0,
-                        "operationInputMaterials": [],
-                        "sampleDefinitions": [                
-                            {
-                                "instructions": "Place the part on the tester device",
-                                "sampleDefinitionName": line_name + "_" + station_str + "_Test",
-                                "plmId": "PLM_ID",
-                                "sampleClass": "EOL_Tester",
-                                "toolResourceInstance": "EOL_Tester_1",
-                                "sampleQty": 1,
-                                "settings": {"Configuration N/L/R": "N"},
-                                "attributes": {
-                                    "testUUID": {
-                                        "DataType": "STRING",
-                                        "Required": True,
-                                        "Description": "Defined by Test SW",
-                                        "Format": "",
-                                        "Order": 1,
-                                        "MinimumValue": "",
-                                        "MaximumValue": ""
-                                    },
-                                    "testType": {
-                                        "DataType": "STRING",
-                                        "Required": True,
-                                        "Description": "Test type, e.g. battery-pre-potting",
-                                        "Format": "",
-                                        "Order": 2,
-                                        "MinimumValue": "",
-                                        "MaximumValue": ""
-                                    },
-                                    "testStatus": {
-                                        "DataType": "STRING",
-                                        "Required": True,
-                                        "Description": "Status of test: PASS, FAIL, or ERROR",
-                                        "Format": "",
-                                        "Order": 3,
-                                        "MinimumValue": "",
-                                        "MaximumValue": ""
-                                    },
-                                    "testErrorCode": {
-                                        "DataType": "INTEGER",
-                                        "Required": True,
-                                        "Description": "Classifies type of error encountered (e.g., 0 if none)",
-                                        "Format": "",
-                                        "Order": 4,
-                                        "MinimumValue": "",
-                                        "MaximumValue": ""
-                                    },
-                                    "testErrors": {
-                                        "DataType": "STRING",
-                                        "Required": True,
-                                        "Description": "List of errors separated by semicolon",
-                                        "Format": "",
-                                        "Order": 5,
-                                        "MinimumValue": "",
-                                        "MaximumValue": ""
-                                    },
-                                    "rejectCode": {
-                                        "DataType": "INTEGER",
-                                        "Required": True,
-                                        "Description": "Reject code classifying error type",
-                                        "Format": "",
-                                        "Order": 6,
-                                        "MinimumValue": "",
-                                        "MaximumValue": ""
-                                    },
-                                    "rejectReason": {
-                                        "DataType": "STRING",
-                                        "Required": True,
-                                        "Description": "List of failed test parameters separated by semicolon",
-                                        "Format": "",
-                                        "Order": 7,
-                                        "MinimumValue": "",
-                                        "MaximumValue": ""
-                                    },
-                                    "testRevision": {
-                                        "DataType": "STRING",
-                                        "Required": True,
-                                        "Description": "Revision code",
-                                        "Format": "",
-                                        "Order": 8,
-                                        "MinimumValue": "",
-                                        "MaximumValue": ""
-                                    },
-                                    "testCount": {
-                                        "DataType": "INTEGER",
-                                        "Required": True,
-                                        "Description": "Number of tests run since permission granted",
-                                        "Format": "",
-                                        "Order": 9,
-                                        "MinimumValue": "",
-                                        "MaximumValue": ""
-                                    },
-                                    "testTimestamp": {
-                                        "DataType": "STRING",
-                                        "Required": True,
-                                        "Description": "Timestamp in 'YYYY-MM-DD HH:MM:SS UTC' format",
-                                        "Format": "YYYY-MM-DD HH:mm:ss UTC",
-                                        "Order": 10,
-                                        "MinimumValue": "",
-                                        "MaximumValue": ""
-                                    },
-                                    "testDuration": {
-                                        "DataType": "STRING",
-                                        "Required": True,
-                                        "Description": "Duration of test in 'HH:MM:SS' format",
-                                        "Format": "HH:MM:SS",
-                                        "Order": 11,
-                                        "MinimumValue": "",
-                                        "MaximumValue": ""
-                                    },
-                                    "urlString": {
-                                        "DataType": "STRING",
-                                        "Required": True,
-                                        "Description": "URL to detailed test report",
-                                        "Format": "URL",
-                                        "Order": 12,
-                                        "MinimumValue": "",
-                                        "MaximumValue": ""
-                                    },
-                                    "operatorUserName": {
-                                        "DataType": "STRING",
-                                        "Required": True,
-                                        "Description": "User name of operator starting tests",
-                                        "Format": "",
-                                        "Order": 13,
-                                        "MinimumValue": "",
-                                        "MaximumValue": ""
-                                    },
-                                    "operatorLevel": {
-                                        "DataType": "STRING",
-                                        "Required": True,
-                                        "Description": "Operator level, e.g., OPERATOR or ADMIN",
-                                        "Format": "",
-                                        "Order": 14,
-                                        "MinimumValue": "",
-                                        "MaximumValue": ""
-                                    },
-                                    "testMetadata": {
-                                        "DataType": "STRING",
-                                        "Required": True,
-                                        "Description": "Catch-all JSON string with additional test info",
-                                        "Format": "JSON string",
-                                        "Order": 15,
-                                        "MinimumValue": "",
-                                        "MaximumValue": ""
-                                    }
-                                }
-                            }
-                        ],
-                        "workInstruction": {
-                            "plmId": "PLM_ID",
-                            "pdfLink": ""
+                # Create a JSON file for each line name
+                for line_name in line_names:
+                    try:
+                        metadata = {
+                            "scopeMaterialNumber": meta_dict.get("scopeMaterialNumber", ""),
+                            "scopeMaterialTitle": meta_dict.get("scopeMaterialTitle", ""),
+                            "scopeMaterialPlmId": meta_dict.get("scopeMaterialPlmId", "00000010"),
+                            "areaName": meta_dict.get("areaName", ""),
+                            "lineName": line_name,
+                            "operationsDefinitions": []
                         }
-                    }
 
-                    op_row = group[group["Step"] == "000"]
-                    operation_title = op_row["Title"].values[0] if not op_row.empty else f"Station {station_str}"
+                        # Extract headers and data using configuration
+                        headers = df.iloc[config.EXCEL_CONFIG['HEADER_ROW'], 1:].astype(str).str.strip().tolist()
+                        data_df = df.iloc[config.EXCEL_CONFIG['DATA_START_ROW']:, 1:1+len(headers)]
+                        data_df.columns = headers
 
-                    operation = {
-                        "operationTitle": operation_title,
-                        "operationName": "",
-                        "operationPlmId": "",
-                        "workstationName": f"S{station_str}",
-                        "operationSegments": []
-                    }
+                        # Clean data
+                        data_df["Station"] = data_df["Station"].ffill().infer_objects(copy=False)
+                        data_df["Step"] = data_df["Step"].fillna("").astype(str).str.zfill(3)
+                        data_df["Scan"] = data_df["Scan"].astype(str).str.lower().eq("true")
+                        data_df["Trace"] = data_df["Trace"].astype(str).str.lower().eq("true")
 
-                    if not op_row.empty and any(keyword in str(operation_title) for keyword in ["EOL", "Test", "test"]):
-                        operation["operationSegments"].append(predefined_segment)
-                    else:
-                        step_groups = group[group["Step"] != "000"].groupby("Step")
-                        
-                        for step, step_rows in step_groups:
-                            materials = []
-                            
-                            # Process all rows for this step to collect materials
-                            for _, row in step_rows.iterrows():
-                                if pd.notna(row.get("Parts")):
-                                    materials.append({
-                                        "inputMaterialPMlmId": "PLM_ID",
-                                        "materialName": "",
-                                        "quantity": int(row["Qty"]) if pd.notna(row["Qty"]) else 1,
-                                        "materialNumber": str(row["Parts"]).strip(),
-                                        "materialTitle": "",
-                                        "units": "each",
-                                        "scan": "True" if row["Scan"] else "False",
-                                        "parentIdentifier": "True" if row["Trace"] else "False"
-                                    })
+                        for station, group in data_df.groupby("Station"):
+                            station_int = int(station)
+                            station_str = f"{station_int:03}"
 
-                            # Use the first row for segment details
-                            first_row = step_rows.iloc[0]
-                            
-                            sample_definitions = []
+                            predefined_segment = create_predefined_segment(line_name, station_str)
 
-                            # Confirm sample
-                            confirm_sample = {
-                                "instructions": "Next?",
-                                "sampleDefinitionName": line_name + "Confirm" if line_name else "",
-                                "plmId": "PLM_ID",
-                                "sampleClass": "Confirm",
-                                "sampleQty": 1,
-                                "attributes": {
-                                    "PassFail": {
-                                        "DataType": "BOOLEAN",
-                                        "Required": True,
-                                        "Description": "STRING",
-                                        "Format": "#0.00",
-                                        "Order": "1",
-                                        "MinimumValue": "",
-                                        "MaximumValue": ""
-                                    }
-                                }
+                            op_row = group[group["Step"] == "000"]
+                            operation_title = op_row["Title"].values[0] if not op_row.empty else f"Station {station_str}"
+
+                            operation = {
+                                "operationTitle": operation_title,
+                                "operationName": "",
+                                "operationPlmId": "",
+                                "workstationName": f"S{station_str}",
+                                "operationSegments": []
                             }
-                            sample_definitions.append(confirm_sample)
 
-                            # Torque sample
-                            if pd.notna(first_row.get("Tools")) and pd.notna(first_row.get("Pset Program Number")):
-                                torque_sample = {
-                                    "instructions": first_row["Title"],
-                                    "sampleDefinitionName": line_name + "Torque" if line_name else "",
-                                    "plmId": "PLM_ID",
-                                    "toolResourceInstance": first_row["Tools"],
-                                    "sampleClass": "Torque",
-                                    "sampleQty": int(first_row["Qty"]) if pd.notna(first_row["Qty"]) else 1,
-                                    "settings": {
-                                        "pSet": str(first_row["Pset Program Number"])
-                                    },
-                                    "attributes": {
-                                        "PassFail": {
-                                            "DataType": "BOOLEAN",
-                                            "Required": True,
-                                            "Description": "STRING",
-                                            "Format": "#0.00",
-                                            "Order": 1,
-                                            "MinimumValue": "",
-                                            "MaximumValue": ""
-                                        },
-                                        "Torque": {
-                                            "DataType": "REAL",
-                                            "Required": True,
-                                            "Description": "STRING",
-                                            "Format": "#0.00",
-                                            "Order": 2,
-                                            "NominalValue": "1.5",
-                                            "MinimumValue": "1.3",
-                                            "MaximumValue": "1.7"
-                                        },
-                                        "Angle": {
-                                            "DataType": "REAL",
-                                            "Required": True,
-                                            "Description": "STRING",
-                                            "Format": "#0.00",
-                                            "Order": 3,
-                                            "MinimumValue": "",
-                                            "MaximumValue": "",
-                                            "NominalValue": ""
-                                        },
-                                        "PSet": {
-                                            "DataType": "INTEGER",
-                                            "Required": True,
-                                            "Description": "STRING",
-                                            "Format": "#0.00",
-                                            "Order": 4,
-                                            "MinimumValue": "",
-                                            "MaximumValue": ""
+                            if not op_row.empty and any(keyword in str(operation_title) for keyword in ["EOL", "Test", "test"]):
+                                operation["operationSegments"].append(predefined_segment)
+                            else:
+                                step_groups = group[group["Step"] != "000"].groupby("Step")
+                                
+                                for step, step_rows in step_groups:
+                                    materials = []
+                                    
+                                    # Process all rows for this step to collect materials
+                                    for _, row in step_rows.iterrows():
+                                        if pd.notna(row.get("Parts")):
+                                            materials.append({
+                                                "inputMaterialPMlmId": "PLM_ID",
+                                                "materialName": "",
+                                                "quantity": int(row["Qty"]) if pd.notna(row["Qty"]) else 1,
+                                                "materialNumber": str(row["Parts"]).strip(),
+                                                "materialTitle": "",
+                                                "units": "each",
+                                                "scan": "True" if row["Scan"] else "False",
+                                                "parentIdentifier": "True" if row["Trace"] else "False"
+                                            })
+
+                                    # Use the first row for segment details
+                                    first_row = step_rows.iloc[0]
+                                    
+                                    sample_definitions = []
+
+                                    # Confirm sample
+                                    confirm_sample = {
+                                        "instructions": "Next?",
+                                        "sampleDefinitionName": line_name + "Confirm" if line_name else "",
+                                        "plmId": "PLM_ID",
+                                        "sampleClass": "Confirm",
+                                        "sampleQty": 1,
+                                        "attributes": {
+                                            "PassFail": {
+                                                "DataType": "BOOLEAN",
+                                                "Required": True,
+                                                "Description": "STRING",
+                                                "Format": "#0.00",
+                                                "Order": "1",
+                                                "MinimumValue": "",
+                                                "MaximumValue": ""
+                                            }
                                         }
                                     }
-                                }
-                                sample_definitions.append(torque_sample)
+                                    sample_definitions.append(confirm_sample)
 
-                            # Build segment
-                            segment = {
-                                "segmentTitle": first_row["Title"],
-                                "segmentName": "",
-                                "segmentPlmId": "",
-                                "segmentSequence": 0,
-                                "operationInputMaterials": materials,
-                                "sampleDefinitions": sample_definitions,
-                            }
+                                    # Torque sample
+                                    if pd.notna(first_row.get("Tools")) and pd.notna(first_row.get("Pset Program Number")):
+                                        torque_sample = {
+                                            "instructions": first_row["Title"],
+                                            "sampleDefinitionName": line_name + "Torque" if line_name else "",
+                                            "plmId": "PLM_ID",
+                                            "toolResourceInstance": first_row["Tools"],
+                                            "sampleClass": "Torque",
+                                            "sampleQty": int(first_row["Qty"]) if pd.notna(first_row["Qty"]) else 1,
+                                            "settings": {
+                                                "pSet": str(first_row["Pset Program Number"])
+                                            },
+                                            "attributes": {
+                                                "PassFail": {
+                                                    "DataType": "BOOLEAN",
+                                                    "Required": True,
+                                                    "Description": "STRING",
+                                                    "Format": "#0.00",
+                                                    "Order": 1,
+                                                    "MinimumValue": "",
+                                                    "MaximumValue": ""
+                                                },
+                                                "Torque": {
+                                                    "DataType": "REAL",
+                                                    "Required": True,
+                                                    "Description": "STRING",
+                                                    "Format": "#0.00",
+                                                    "Order": 2,
+                                                    "NominalValue": "1.5",
+                                                    "MinimumValue": "1.3",
+                                                    "MaximumValue": "1.7"
+                                                },
+                                                "Angle": {
+                                                    "DataType": "REAL",
+                                                    "Required": True,
+                                                    "Description": "STRING",
+                                                    "Format": "#0.00",
+                                                    "Order": 3,
+                                                    "MinimumValue": "",
+                                                    "MaximumValue": "",
+                                                    "NominalValue": ""
+                                                },
+                                                "PSet": {
+                                                    "DataType": "INTEGER",
+                                                    "Required": True,
+                                                    "Description": "STRING",
+                                                    "Format": "#0.00",
+                                                    "Order": 4,
+                                                    "MinimumValue": "",
+                                                    "MaximumValue": ""
+                                                }
+                                            }
+                                        }
+                                        sample_definitions.append(torque_sample)
 
-                            # Optional customActions if Fixture is provided
-                            custom_actions = []
-                            if pd.notna(first_row.get("Fixture")) and str(first_row["Fixture"]).strip():
-                                custom_actions.append({
-                                    "actionType": "Scan Fixture",
-                                    "actionTarget": str(first_row["Fixture"]).strip(),
-                                    "actionSettings": {}
-                                })
+                                    # Build segment
+                                    segment = {
+                                        "segmentTitle": first_row["Title"],
+                                        "segmentName": "",
+                                        "segmentPlmId": "",
+                                        "segmentSequence": 0,
+                                        "operationInputMaterials": materials,
+                                        "sampleDefinitions": sample_definitions,
+                                    }
 
-                            if custom_actions:
-                                segment["customActions"] = custom_actions
+                                    # Optional customActions if Fixture is provided
+                                    custom_actions = []
+                                    if pd.notna(first_row.get("Fixture")) and str(first_row["Fixture"]).strip():
+                                        custom_actions.append({
+                                            "actionType": "Scan Fixture",
+                                            "actionTarget": str(first_row["Fixture"]).strip(),
+                                            "actionSettings": {}
+                                        })
 
-                            # Work instruction block
-                            segment["workInstruction"] = {
-                                "pdfLink": first_row["Work Instruction"] if pd.notna(first_row["Work Instruction"]) else "",
-                                "plmId": "PLM_ID"
-                            }
+                                    if custom_actions:
+                                        segment["customActions"] = custom_actions
 
-                            operation["operationSegments"].append(segment)
+                                    # Work instruction block
+                                    segment["workInstruction"] = {
+                                        "pdfLink": first_row["Work Instruction"] if pd.notna(first_row["Work Instruction"]) else "",
+                                        "plmId": "PLM_ID"
+                                    }
 
-                    metadata["operationsDefinitions"].append(operation)
+                                    operation["operationSegments"].append(segment)
 
-                # Create filename with line name
-                if line_name:
-                    filename = f"{sheet_name.strip()}_{line_name}.json"
-                else:
-                    filename = f"{sheet_name.strip()}.json"
-                
-                output_path = os.path.join(output_dir, filename)
-                with open(output_path, "w", encoding="utf-8") as f:
-                    json.dump(convert_bools(metadata), f, indent=2)
-                generated_files.append(output_path)
+                            metadata["operationsDefinitions"].append(operation)
 
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
-            raise RuntimeError(f"Error processing sheet '{sheet_name}': {e}")
+                        # Create filename with line name
+                        if line_name:
+                            filename = f"{sheet_name.strip()}_{line_name}.json"
+                        else:
+                            filename = f"{sheet_name.strip()}.json"
+                        
+                        output_path = os.path.join(output_dir, filename)
+                        
+                        # Validate JSON data before saving
+                        validate_json_data(metadata)
+                        
+                        with open(output_path, "w", encoding="utf-8") as f:
+                            json.dump(convert_bools(metadata), f, indent=2)
+                        generated_files.append(output_path)
+                        
+                        logger.info(f"Generated JSON file: {output_path}")
+                        
+                    except Exception as e:
+                        logger.error(f"Error processing line name '{line_name}' for sheet '{sheet_name}': {e}")
+                        continue
 
-    return generated_files
+            except Exception as e:
+                logger.error(f"Error processing sheet '{sheet_name}': {e}")
+                continue
+
+        logger.info(f"Successfully generated {len(generated_files)} JSON files")
+        return generated_files
+
+    except Exception as e:
+        logger.error(f"Error processing Excel file: {e}")
+        raise RuntimeError(f"Error processing Excel file: {e}")
 
 
 # === Added Route history === #
