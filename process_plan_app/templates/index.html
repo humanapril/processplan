@@ -260,14 +260,19 @@
         enctype="multipart/form-data"
         onsubmit="handleImportSubmit(event)"
       >
-        <label for="json_file">Upload Process Plan File (.json):</label>
+        <label for="json_files">Upload Process Plan Files (.json):</label>
         <input
           type="file"
-          name="json_file"
-          id="json_file"
+          name="json_files"
+          id="json_files"
           accept=".json"
+          multiple
           required
         />
+        <small style="color: #999; display: block; margin-top: 5px;">
+          You can select multiple JSON files. Files will be processed sequentially. 
+          Processing stops on first error (non-200 status code).
+        </small>
 
         <label for="revision_note"
           >Revision Note (what changed in this process plan):</label
@@ -290,13 +295,14 @@
         <button type="submit" id="importBtn">Upload and Post to MES</button>
 
         <div id="progressContainer" style="display: none; margin-top: 20px">
-          <p>Initializing...</p>
+          <p id="progressMessage">Initializing...</p>
           <progress
             id="progressBar"
             value="0"
             max="100"
             style="width: 100%"
           ></progress>
+          <div id="fileProgress" style="margin-top: 10px; font-size: 0.9em; color: #999;"></div>
         </div>
 
         <div id="importResult" style="margin-top: 20px"></div>
@@ -331,43 +337,49 @@
       async function handleImportSubmit(event) {
         event.preventDefault();
 
-        const fileInput = document.getElementById("json_file");
-        const file = fileInput.files[0];
-        if (!file) return;
+        const fileInputs = document.getElementById("json_files").files;
+        if (fileInputs.length === 0) {
+          alert("Please select at least one JSON file to upload.");
+          return;
+        }
 
         const button = document.getElementById("importBtn");
         const progressBar = document.getElementById("progressBar");
         const progressContainer = document.getElementById("progressContainer");
         const resultBox = document.getElementById("importResult");
+        const progressMessage = document.getElementById("progressMessage");
+        const fileProgress = document.getElementById("fileProgress");
 
         button.disabled = true;
         resultBox.innerHTML = "";
         progressContainer.style.display = "block";
+        progressBar.value = 0;
+        progressMessage.textContent = "Initializing...";
+        fileProgress.textContent = "";
 
         const formData = new FormData();
-        formData.append("json_file", file);
+        for (let i = 0; i < fileInputs.length; i++) {
+          formData.append("json_files", fileInputs[i]);
+        }
         const revisionNote = document.getElementById("revision_note").value;
         formData.append("revision_note", revisionNote);
-        const totalTimeout = 120000;
+
+        const totalTimeout = 120000; // 2 minutes
         const steps = 5;
         const stepInterval = totalTimeout / steps;
         const stepProgress = 100 / steps;
         let currentStep = 1;
 
-        const messagePara = document.querySelector("#progressContainer p");
-        progressBar.value = stepProgress;
-        messagePara.innerHTML = `Step ${currentStep} of ${steps} completed...<br><small style="color:#999;">(This could take up to 3 min to create object and data models in MES. Please be patient.)</small>`;
-
         const intervalId = setInterval(() => {
           currentStep++;
           if (currentStep <= steps) {
             progressBar.value = currentStep * stepProgress;
-            messagePara.innerHTML = `Step ${currentStep} of ${steps} completed...<br><small style="color:#999;">(This could take up to 3 min to create object and data models in MES. Please be patient.)</small>`;
+            progressMessage.textContent = `Step ${currentStep} of ${steps} completed...<br><small style="color:#999;">(This could take up to 3 min to create object and data models in MES. Please be patient.)</small>`;
           }
         }, stepInterval);
 
         try {
-          const response = await fetch("/import", {
+          const response = await fetch("/import-multiple", {
             method: "POST",
             body: formData,
           });
@@ -383,23 +395,76 @@
 
           clearInterval(intervalId);
           progressBar.value = 100;
-          messagePara.textContent = `Upload complete`;
 
-          resultBox.innerHTML = `
-          <p><strong>Filename:</strong> ${data.filename}</p>
-          <p><strong>Status Code:</strong> ${data.status_code}</p>
-          <pre style="white-space: pre-wrap; background: #1e1e1e; padding: 10px; border-radius: 5px;">${data.response}</pre>
-        `;
+          // Handle the response based on success/failure
+          if (data.success) {
+            progressMessage.textContent = `Upload complete - ${data.processed_count}/${data.total_files} files imported successfully`;
+            
+            let resultsHtml = `<h4 style="color: #797af2;">✅ Batch Import Successful</h4>`;
+            resultsHtml += `<p><strong>Total Files:</strong> ${data.total_files}</p>`;
+            resultsHtml += `<p><strong>Successfully Imported:</strong> ${data.processed_count}</p>`;
+            resultsHtml += `<p><strong>Message:</strong> ${data.message}</p>`;
+            
+            // Display results for each file
+            if (data.results && data.results.length > 0) {
+              resultsHtml += `<h5 style="color: #797af2; margin-top: 20px;">File Results:</h5>`;
+              data.results.forEach((result, index) => {
+                const statusColor = result.success ? '#4CAF50' : '#f44336';
+                const statusIcon = result.success ? '✅' : '❌';
+                
+                resultsHtml += `
+                  <div style="border: 1px solid #444; padding: 10px; margin: 10px 0; border-radius: 5px;">
+                    <p><strong>${index + 1}. ${result.filename}</strong> <span style="color: ${statusColor};">${statusIcon}</span></p>
+                    <p><strong>Status Code:</strong> ${result.status_code}</p>
+                    <pre style="white-space: pre-wrap; background: #1e1e1e; padding: 10px; border-radius: 5px; font-size: 0.9em; max-height: 200px; overflow-y: auto;">${result.response}</pre>
+                  </div>
+                `;
+              });
+            }
+            
+            resultBox.innerHTML = resultsHtml;
+          } else {
+            // Handle error response
+            progressMessage.textContent = `Upload failed - ${data.processed_count}/${data.total_files} files processed before error`;
+            
+            let resultsHtml = `<h4 style="color: #f44336;">❌ Batch Import Failed</h4>`;
+            resultsHtml += `<p><strong>Error:</strong> ${data.error}</p>`;
+            resultsHtml += `<p><strong>Total Files:</strong> ${data.total_files}</p>`;
+            resultsHtml += `<p><strong>Processed Before Error:</strong> ${data.processed_count}</p>`;
+            if (data.failed_at) {
+              resultsHtml += `<p><strong>Failed At:</strong> ${data.failed_at}</p>`;
+            }
+            
+            // Display results for processed files
+            if (data.results && data.results.length > 0) {
+              resultsHtml += `<h5 style="color: #797af2; margin-top: 20px;">File Results:</h5>`;
+              data.results.forEach((result, index) => {
+                const statusColor = result.success ? '#4CAF50' : '#f44336';
+                const statusIcon = result.success ? '✅' : '❌';
+                
+                resultsHtml += `
+                  <div style="border: 1px solid #444; padding: 10px; margin: 10px 0; border-radius: 5px;">
+                    <p><strong>${index + 1}. ${result.filename}</strong> <span style="color: ${statusColor};">${statusIcon}</span></p>
+                    <p><strong>Status Code:</strong> ${result.status_code}</p>
+                    ${result.error ? `<p><strong>Error:</strong> <span style="color: #f44336;">${result.error}</span></p>` : ''}
+                    <pre style="white-space: pre-wrap; background: #1e1e1e; padding: 10px; border-radius: 5px; font-size: 0.9em; max-height: 200px; overflow-y: auto;">${result.response}</pre>
+                  </div>
+                `;
+              });
+            }
+            
+            resultBox.innerHTML = resultsHtml;
+          }
         } catch (err) {
           clearInterval(intervalId);
           progressBar.value = 0;
-          messagePara.textContent = `Upload failed`;
+          progressMessage.textContent = `Upload failed`;
           resultBox.innerHTML = `<p style="color:red;">${err.message}</p>`;
         } finally {
           button.disabled = false;
           setTimeout(() => {
             progressContainer.style.display = "none";
-          }, 3000);
+          }, 5000); // Show results for 5 seconds instead of 3
         }
       }
     </script>

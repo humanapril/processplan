@@ -308,77 +308,281 @@ def index():
 @app.route('/import', methods=['POST'])
 @login_required
 def import_single_json():
+    """Legacy single file import - kept for backward compatibility"""
+    return import_multiple_jsons()
+
+@app.route('/import-multiple', methods=['POST'])
+@login_required
+def import_multiple_jsons():
+    """
+    Import multiple JSON files sequentially.
+    Continues on success (200), stops on first error.
+    Each file gets its own history entry.
+    """
     try:
-        file = request.files.get('json_file')
+        files = request.files.getlist('json_files')
         revision_note = request.form.get('revision_note', '').strip()
         
-        if not file or not file.filename.endswith('.json'):
-            logger.warning("Invalid file uploaded or missing")
-            return jsonify({"error": "Invalid file type."}), 400
+        if not files:
+            logger.warning("No files uploaded")
+            return jsonify({"error": "No files uploaded."}), 400
 
-        # Validate and sanitize filename
-        filename = sanitize_filename(file.filename)
+        # Validate that all files are JSON
+        for file in files:
+            if not file or not file.filename.endswith('.json'):
+                logger.warning(f"Invalid file type: {file.filename if file else 'None'}")
+                return jsonify({"error": f"Invalid file type: {file.filename}. Only .json files are allowed."}), 400
+
+        results = []
+        processed_count = 0
+        total_files = len(files)
         
-        raw_data = file.read()
-        data = json.loads(raw_data.decode('utf-8'))
+        logger.info(f"Starting batch import of {total_files} files")
         
-        # Validate JSON data structure
-        validate_json_data(data)
+        for i, file in enumerate(files):
+            try:
+                # Validate and sanitize filename
+                filename = sanitize_filename(file.filename)
+                
+                logger.info(f"Processing file {i+1}/{total_files}: {filename}")
+                
+                # Read and validate JSON data
+                raw_data = file.read()
+                data = json.loads(raw_data.decode('utf-8'))
+                validate_json_data(data)
+                
+                # Post to MES
+                logger.info(f"Posting to MES with payload from {filename}")
+                logger.debug(f"Payload preview: {json.dumps(data, indent=2)[:1000]}")
+
+                response = requests.post(
+                    config.MES_API_URL,
+                    json=data,
+                    auth=HTTPBasicAuth(config.MES_USERNAME, config.MES_PASSWORD),
+                    headers={"Content-Type": "application/json"},
+                    timeout=config.TIMEOUT_SECONDS
+                )
+
+                logger.info(f"MES Response for {filename}: {response.status_code}")
+                logger.debug(f"Response preview: {response.text[:1000]}")
+
+                # Save to DB regardless of status code
+                history = ProcessPlanHistory(
+                    user_email=current_user.email,
+                    uploaded_filename=filename,
+                    revision_note=revision_note,
+                    status_code=str(response.status_code),
+                    response_summary=response.text[:1000],
+                    json_blob=raw_data
+                )
+                db.session.add(history)
+                db.session.commit()
+                
+                # Check if successful
+                if response.status_code == 200:
+                    processed_count += 1
+                    results.append({
+                        "filename": filename,
+                        "status_code": response.status_code,
+                        "response": response.text[:1000],
+                        "success": True
+                    })
+                    logger.info(f"Successfully imported JSON: {filename}")
+                else:
+                    # Non-200 status code - stop processing
+                    error_msg = f"Import failed for {filename}. Status code: {response.status_code}"
+                    logger.error(error_msg)
+                    
+                    results.append({
+                        "filename": filename,
+                        "status_code": response.status_code,
+                        "response": response.text[:1000],
+                        "success": False,
+                        "error": error_msg
+                    })
+                    
+                    # Return error with results so far
+                    return jsonify({
+                        "error": f"Import failed at file {i+1}/{total_files}: {filename}",
+                        "processed_count": processed_count,
+                        "total_files": total_files,
+                        "results": results,
+                        "failed_at": filename
+                    }), 400
+                    
+            except ValidationError as e:
+                logger.warning(f"Validation error for {filename}: {e}")
+                # Save failed attempt to DB
+                history = ProcessPlanHistory(
+                    user_email=current_user.email,
+                    uploaded_filename=filename,
+                    revision_note=revision_note,
+                    status_code="Validation Error",
+                    response_summary=str(e),
+                    json_blob=raw_data if 'raw_data' in locals() else b''
+                )
+                db.session.add(history)
+                db.session.commit()
+                
+                results.append({
+                    "filename": filename,
+                    "status_code": "Validation Error",
+                    "response": str(e),
+                    "success": False,
+                    "error": f"Validation error: {str(e)}"
+                })
+                
+                return jsonify({
+                    "error": f"Validation error at file {i+1}/{total_files}: {filename}",
+                    "processed_count": processed_count,
+                    "total_files": total_files,
+                    "results": results,
+                    "failed_at": filename
+                }), 400
+                
+            except json.JSONDecodeError as e:
+                logger.error(f"Invalid JSON format for {filename}: {e}")
+                # Save failed attempt to DB
+                history = ProcessPlanHistory(
+                    user_email=current_user.email,
+                    uploaded_filename=filename,
+                    revision_note=revision_note,
+                    status_code="JSON Error",
+                    response_summary=f"Invalid JSON format: {str(e)}",
+                    json_blob=raw_data if 'raw_data' in locals() else b''
+                )
+                db.session.add(history)
+                db.session.commit()
+                
+                results.append({
+                    "filename": filename,
+                    "status_code": "JSON Error",
+                    "response": f"Invalid JSON format: {str(e)}",
+                    "success": False,
+                    "error": f"Invalid JSON format: {str(e)}"
+                })
+                
+                return jsonify({
+                    "error": f"Invalid JSON format at file {i+1}/{total_files}: {filename}",
+                    "processed_count": processed_count,
+                    "total_files": total_files,
+                    "results": results,
+                    "failed_at": filename
+                }), 400
+                
+            except requests.exceptions.Timeout:
+                logger.error(f"MES API request timed out for {filename}")
+                # Save failed attempt to DB
+                history = ProcessPlanHistory(
+                    user_email=current_user.email,
+                    uploaded_filename=filename,
+                    revision_note=revision_note,
+                    status_code="Timeout Error",
+                    response_summary="Request timed out",
+                    json_blob=raw_data if 'raw_data' in locals() else b''
+                )
+                db.session.add(history)
+                db.session.commit()
+                
+                results.append({
+                    "filename": filename,
+                    "status_code": "Timeout Error",
+                    "response": "Request timed out",
+                    "success": False,
+                    "error": "Request timed out"
+                })
+                
+                return jsonify({
+                    "error": f"Request timed out at file {i+1}/{total_files}: {filename}",
+                    "processed_count": processed_count,
+                    "total_files": total_files,
+                    "results": results,
+                    "failed_at": filename
+                }), 408
+                
+            except requests.exceptions.RequestException as e:
+                logger.error(f"MES API request failed for {filename}: {e}")
+                # Save failed attempt to DB
+                history = ProcessPlanHistory(
+                    user_email=current_user.email,
+                    uploaded_filename=filename,
+                    revision_note=revision_note,
+                    status_code="Request Error",
+                    response_summary=f"Failed to connect to MES API: {str(e)}",
+                    json_blob=raw_data if 'raw_data' in locals() else b''
+                )
+                db.session.add(history)
+                db.session.commit()
+                
+                results.append({
+                    "filename": filename,
+                    "status_code": "Request Error",
+                    "response": f"Failed to connect to MES API: {str(e)}",
+                    "success": False,
+                    "error": f"Failed to connect to MES API: {str(e)}"
+                })
+                
+                return jsonify({
+                    "error": f"Connection failed at file {i+1}/{total_files}: {filename}",
+                    "processed_count": processed_count,
+                    "total_files": total_files,
+                    "results": results,
+                    "failed_at": filename
+                }), 503
+                
+            except Exception as e:
+                logger.error(f"Unexpected error for {filename}: {e}")
+                import traceback
+                traceback.print_exc()
+                
+                # Save failed attempt to DB
+                history = ProcessPlanHistory(
+                    user_email=current_user.email,
+                    uploaded_filename=filename,
+                    revision_note=revision_note,
+                    status_code="Unexpected Error",
+                    response_summary=str(e),
+                    json_blob=raw_data if 'raw_data' in locals() else b''
+                )
+                db.session.add(history)
+                db.session.commit()
+                
+                results.append({
+                    "filename": filename,
+                    "status_code": "Unexpected Error",
+                    "response": str(e),
+                    "success": False,
+                    "error": str(e)
+                })
+                
+                return jsonify({
+                    "error": f"Unexpected error at file {i+1}/{total_files}: {filename}",
+                    "processed_count": processed_count,
+                    "total_files": total_files,
+                    "results": results,
+                    "failed_at": filename
+                }), 500
+
+        # All files processed successfully
+        logger.info(f"Successfully completed batch import: {processed_count}/{total_files} files")
         
-        logger.info(f"Posting to MES with payload from {filename}")
-        logger.debug(f"Payload preview: {json.dumps(data, indent=2)[:1000]}")
-
-        response = requests.post(
-            config.MES_API_URL,
-            json=data,
-            auth=HTTPBasicAuth(config.MES_USERNAME, config.MES_PASSWORD),
-            headers={"Content-Type": "application/json"},
-            timeout=config.TIMEOUT_SECONDS
-        )
-
-        logger.info(f"MES Response: {response.status_code}")
-        logger.debug(f"Response preview: {response.text[:1000]}")
-
-        # Save to DB
-        history = ProcessPlanHistory(
-            user_email=current_user.email,
-            uploaded_filename=filename,
-            revision_note=revision_note,
-            status_code=str(response.status_code),
-            response_summary=response.text[:1000],
-            json_blob=raw_data
-        )
-        db.session.add(history)
-        db.session.commit()
-        
-        logger.info(f"Successfully imported JSON: {filename}")
-
         return jsonify({
-            "filename": filename,
-            "status_code": response.status_code,
-            "response": response.text[:1000]
+            "success": True,
+            "message": f"Successfully imported {processed_count}/{total_files} files",
+            "processed_count": processed_count,
+            "total_files": total_files,
+            "results": results
         })
 
-    except ValidationError as e:
-        logger.warning(f"Validation error during import: {e}")
-        return jsonify({"error": str(e)}), 400
-    except json.JSONDecodeError as e:
-        logger.error(f"Invalid JSON format: {e}")
-        return jsonify({"error": "Invalid JSON format."}), 400
-    except requests.exceptions.Timeout:
-        logger.error("MES API request timed out")
-        return jsonify({"error": "Request timed out. Please try again."}), 408
-    except requests.exceptions.RequestException as e:
-        logger.error(f"MES API request failed: {e}")
-        return jsonify({"error": "Failed to connect to MES API."}), 503
     except Exception as e:
-        logger.error(f"Exception occurred during import: {e}")
+        logger.error(f"Exception occurred during batch import: {e}")
         import traceback
         traceback.print_exc()
         return jsonify({
-            "filename": file.filename if file else "N/A",
-            "status_code": "Error",
-            "response": str(e)
+            "error": f"Batch import failed: {str(e)}",
+            "processed_count": 0,
+            "total_files": 0,
+            "results": []
         }), 500
 
 def process_excel_sheets_to_jsons(excel_file_path, output_dir):
