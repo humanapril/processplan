@@ -247,15 +247,67 @@ for filename in os.listdir(input_dir):
 
                 if not op_row.empty and any(keyword in str(operation_title) for keyword in ["EOL", "Test", "test"]):
                     operation["operationSegments"].append(predefined_segment)
+                elif not op_row.empty and any(keyword in str(operation_title) for keyword in ["Cure", "Buffer"]):
+                    # Cure station with TIMCure sample definitions
+                    cure_segment = {
+                        "segmentTitle": operation_title,
+                        "segmentName": "",
+                        "segmentPlmId": "",
+                        "segmentSequence": 0,
+                        "operationInputMaterials": [],
+                        "sampleDefinitions": [
+                            {
+                                "instructions": "StartTimestamp",
+                                "sampleDefinitionName": "StartTimestamp",
+                                "plmId": "PLM_ID",
+                                "sampleClass": "TIMCure",
+                                "sampleQty": 1,
+                                "attributes": {
+                                    "PassFail": {
+                                        "DataType": "BOOLEAN",
+                                        "Required": True,
+                                        "Description": "STRING",
+                                        "Format": "#0.00",
+                                        "Order": "1",
+                                        "MinimumValue": "",
+                                        "MaximumValue": ""
+                                    }
+                                }
+                            },
+                            {
+                                "instructions": "EndTimestamp",
+                                "sampleDefinitionName": "EndTimestamp",
+                                "plmId": "PLM_ID",
+                                "sampleClass": "TIMCure",
+                                "sampleQty": 1,
+                                "attributes": {
+                                    "PassFail": {
+                                        "DataType": "BOOLEAN",
+                                        "Required": True,
+                                        "Description": "STRING",
+                                        "Format": "#0.00",
+                                        "Order": "1",
+                                        "MinimumValue": "",
+                                        "MaximumValue": ""
+                                    }
+                                }
+                            }
+                        ],
+                        "workInstruction": {
+                            "pdfLink": "",
+                            "plmId": "PLM_ID"
+                        }
+                    }
+                    operation["operationSegments"].append(cure_segment)
                 else:
                     step_groups = group[group["Step"] != "000"].groupby("Step")
                     
                     for step, step_rows in step_groups:
                         materials = []
                         
-                        # Process all rows for this step to collect materials
+                        # Process all rows for this step to collect materials (exclude Manual Entry)
                         for _, row in step_rows.iterrows():
-                            if pd.notna(row.get("Parts")):
+                            if pd.notna(row.get("Parts")) and row.get("Tools") != "Manual Entry":
                                 materials.append({
                                     "inputMaterialPMlmId": "PLM_ID",
                                     "materialName": "",

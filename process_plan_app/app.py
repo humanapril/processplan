@@ -677,7 +677,73 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
                                 "operationSegments": []
                             }
 
-                            if not op_row.empty and any(keyword in str(operation_title) for keyword in ["EOL", "Test", "test"]):
+                            if not op_row.empty and "cure buffer" in operation_title.lower():
+                                # Create dynamic sample class from the Excel title
+                                # Remove common words and clean up the title for use as sample class
+                                sample_class_value = operation_title.strip()
+                                # Remove "Buffer" and "buffer" variations
+                                sample_class_value = sample_class_value.replace("Buffer", "").replace("buffer", "")
+                                # Remove extra spaces and clean up
+                                sample_class_value = " ".join(sample_class_value.split())
+                                # Remove spaces for final sample class name
+                                sample_class_value = sample_class_value.replace(" ", "")
+                                
+                                # If the result is empty or too short, use a default
+                                if not sample_class_value or len(sample_class_value) < 2:
+                                    sample_class_value = "CureBuffer"
+                                
+                                cure_buffer_segment = {
+                                    "segmentTitle": operation_title,
+                                    "segmentName": "",
+                                    "segmentPlmId": "",
+                                    "segmentSequence": 0,
+                                    "operationInputMaterials": [],
+                                    "sampleDefinitions": [
+                                        {
+                                            "instructions": "StartTimestamp",
+                                            "sampleDefinitionName": "StartTimestamp",
+                                            "plmId": "PLM_ID",
+                                            "sampleClass": sample_class_value,
+                                            "sampleQty": 1,
+                                            "attributes": {
+                                                "PassFail": {
+                                                    "DataType": "BOOLEAN",
+                                                    "Required": True,
+                                                    "Description": "STRING",
+                                                    "Format": "#0.00",
+                                                    "Order": "1",
+                                                    "MinimumValue": "",
+                                                    "MaximumValue": ""
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "instructions": "EndTimestamp",
+                                            "sampleDefinitionName": "EndTimestamp",
+                                            "plmId": "PLM_ID",
+                                            "sampleClass": sample_class_value,
+                                            "sampleQty": 1,
+                                            "attributes": {
+                                                "PassFail": {
+                                                    "DataType": "BOOLEAN",
+                                                    "Required": True,
+                                                    "Description": "STRING",
+                                                    "Format": "#0.00",
+                                                    "Order": "1",
+                                                    "MinimumValue": "",
+                                                    "MaximumValue": ""
+                                                }
+                                            }
+                                        }
+                                    ],
+                                    "workInstruction": {
+                                        "pdfLink": "",
+                                        "plmId": "PLM_ID"
+                                    }
+                                }
+                                operation["operationSegments"].append(cure_buffer_segment)
+
+                            elif not op_row.empty and any(kw in operation_title.lower() for kw in ["test", "eol"]):
                                 operation["operationSegments"].append(predefined_segment)
                             else:
                                 step_groups = group[group["Step"] != "000"].groupby("Step")
@@ -685,9 +751,9 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
                                 for step, step_rows in step_groups:
                                     materials = []
                                     
-                                    # Process all rows for this step to collect materials
+                                    # Process all rows for this step to collect materials (exclude Manual Entry)
                                     for _, row in step_rows.iterrows():
-                                        if pd.notna(row.get("Parts")):
+                                        if pd.notna(row.get("Parts")) and row.get("Tools") != "Manual Entry":
                                             materials.append({
                                                 "inputMaterialPMlmId": "PLM_ID",
                                                 "materialName": "",
