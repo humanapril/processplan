@@ -373,38 +373,30 @@
         const totalFiles = fileInputs.length;
         const timeoutPerFile = 600; // 10 minutes per file
         const totalTimeout = totalFiles * timeoutPerFile;
-        const steps = Math.min(totalFiles * 6, 30); // 6 steps per file, max 30 steps
-        const stepInterval = totalTimeout / steps;
-        const stepProgress = 100 / steps;
-        let currentStep = 1;
 
         // Update progress message with file count and estimated time
         const estimatedMinutes = Math.ceil(totalTimeout / 60);
         progressMessage.innerHTML = `Processing ${totalFiles} file(s)...<br><small style="color:#999;">(Estimated time: up to ${estimatedMinutes} minutes. ${timeoutPerFile} seconds per file.)</small>`;
         fileProgress.textContent = `Files: ${totalFiles} | Timeout: ${timeoutPerFile}s per file | Total: ${totalTimeout}s`;
 
-        const intervalId = setInterval(() => {
-          currentStep++;
-          if (currentStep <= steps) {
-            progressBar.value = currentStep * stepProgress;
-            const elapsedSeconds = Math.floor(
-              (currentStep * stepInterval) / 1000
-            );
-            const remainingSeconds = totalTimeout - elapsedSeconds;
-            const remainingMinutes = Math.ceil(remainingSeconds / 60);
+        // Start a simple timeout indicator that just shows elapsed time
+        const startTime = Date.now();
+        const timeoutInterval = setInterval(() => {
+          const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+          const elapsedMinutes = Math.floor(elapsedSeconds / 60);
+          const elapsedSecondsRemainder = elapsedSeconds % 60;
 
-            progressMessage.innerHTML = `Step ${currentStep} of ${steps} completed...<br><small style="color:#999;">(Elapsed: ${elapsedSeconds}s | Remaining: ~${remainingMinutes}min | Processing ${totalFiles} file(s))</small>`;
-            fileProgress.textContent = `Progress: ${Math.round(
-              (currentStep / steps) * 100
-            )}% | Time: ${elapsedSeconds}s/${totalTimeout}s`;
-          }
-        }, stepInterval);
+          progressMessage.innerHTML = `Processing ${totalFiles} file(s)...<br><small style="color:#999;">(Elapsed: ${elapsedMinutes}m ${elapsedSecondsRemainder}s | Timeout: ${timeoutPerFile}s per file)</small>`;
+          fileProgress.textContent = `Elapsed: ${elapsedSeconds}s | Processing files sequentially...`;
+        }, 1000);
 
         try {
           const response = await fetch("/import-multiple", {
             method: "POST",
             body: formData,
           });
+
+          clearInterval(timeoutInterval);
 
           const contentType = response.headers.get("Content-Type") || "";
           let data;
@@ -415,12 +407,20 @@
             throw new Error("Server returned non-JSON response:\n" + text);
           }
 
-          clearInterval(intervalId);
-          progressBar.value = 100;
+          // Calculate actual progress based on results
+          const totalProcessed = data.results ? data.results.length : 0;
+          const successfulFiles = data.results
+            ? data.results.filter((r) => r.success).length
+            : 0;
+          const progressPercentage =
+            totalFiles > 0 ? (totalProcessed / totalFiles) * 100 : 0;
+
+          progressBar.value = progressPercentage;
 
           // Handle the response based on success/failure
           if (data.success) {
-            progressMessage.textContent = `Upload complete - ${data.processed_count}/${data.total_files} files imported successfully`;
+            progressMessage.textContent = `✅ Upload complete - ${successfulFiles}/${totalFiles} files imported successfully`;
+            fileProgress.textContent = `Progress: ${totalProcessed}/${totalFiles} files processed`;
 
             let resultsHtml = `<h4 style="color: #797af2;">✅ Batch Import Successful</h4>`;
             resultsHtml += `<p><strong>Total Files:</strong> ${data.total_files}</p>`;
@@ -451,7 +451,8 @@
             resultBox.innerHTML = resultsHtml;
           } else {
             // Handle error response
-            progressMessage.textContent = `Upload failed - ${data.processed_count}/${data.total_files} files processed before error`;
+            progressMessage.textContent = `❌ Upload failed - ${successfulFiles}/${totalFiles} files processed before error`;
+            fileProgress.textContent = `Progress: ${totalProcessed}/${totalFiles} files processed (stopped on error)`;
 
             let resultsHtml = `<h4 style="color: #f44336;">❌ Batch Import Failed</h4>`;
             resultsHtml += `<p><strong>Error:</strong> ${data.error}</p>`;
@@ -490,15 +491,16 @@
             resultBox.innerHTML = resultsHtml;
           }
         } catch (err) {
-          clearInterval(intervalId);
+          clearInterval(timeoutInterval);
           progressBar.value = 0;
-          progressMessage.textContent = `Upload failed`;
+          progressMessage.textContent = `❌ Upload failed`;
+          fileProgress.textContent = `Error occurred during processing`;
           resultBox.innerHTML = `<p style="color:red;">${err.message}</p>`;
         } finally {
           button.disabled = false;
           setTimeout(() => {
             progressContainer.style.display = "none";
-          }, 5000); // Show results for 5 seconds instead of 3
+          }, 5000); // Show results for 5 seconds
         }
       }
     </script>
