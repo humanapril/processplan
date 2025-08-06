@@ -9,11 +9,16 @@
         background-color: #0b0b0b;
         color: #ccc;
         padding: 20px;
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
       }
 
       h2 {
         color: #797af2;
         margin-bottom: 20px;
+        margin-top: 0;
       }
 
       .controls {
@@ -74,23 +79,36 @@
         cursor: not-allowed;
       }
 
+      .table-container {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+      }
+
       table {
         width: 100%;
         border-collapse: collapse;
         margin-bottom: 20px;
+        flex: 1;
+        min-height: 400px;
       }
 
       th,
       td {
-        padding: 10px;
+        padding: 12px 10px;
         border: 1px solid #333;
         text-align: left;
+        vertical-align: top;
       }
 
       th {
         background-color: #1a1a1a;
         color: #797af2;
         cursor: pointer;
+        position: sticky;
+        top: 0;
+        z-index: 10;
       }
 
       th:hover {
@@ -103,6 +121,23 @@
 
       tr:hover {
         background-color: #2a2a2a;
+      }
+
+      tbody {
+        display: block;
+        overflow-y: auto;
+        max-height: calc(100vh - 300px);
+        min-height: 400px;
+      }
+
+      thead, tbody tr {
+        display: table;
+        width: 100%;
+        table-layout: fixed;
+      }
+
+      thead {
+        width: calc(100% - 17px); /* Account for scrollbar */
       }
 
       a {
@@ -120,6 +155,7 @@
         align-items: center;
         gap: 10px;
         margin-top: 20px;
+        flex-shrink: 0;
       }
 
       .pagination a, .pagination span {
@@ -151,6 +187,7 @@
         color: #999;
         font-size: 0.9em;
         margin-bottom: 10px;
+        flex-shrink: 0;
       }
 
       .refresh-controls {
@@ -158,6 +195,7 @@
         gap: 10px;
         align-items: center;
         margin-bottom: 10px;
+        flex-shrink: 0;
       }
 
       .refresh-status {
@@ -175,6 +213,57 @@
 
       .back-link:hover {
         text-decoration: underline;
+      }
+
+      /* Column widths for better layout */
+      th:nth-child(1), td:nth-child(1) { width: 20%; } /* User */
+      th:nth-child(2), td:nth-child(2) { width: 25%; } /* File */
+      th:nth-child(3), td:nth-child(3) { width: 15%; } /* Uploaded */
+      th:nth-child(4), td:nth-child(4) { width: 10%; } /* Status */
+      th:nth-child(5), td:nth-child(5) { width: 25%; } /* Revision Note */
+      th:nth-child(6), td:nth-child(6) { width: 5%; }  /* Download */
+
+      /* Make revision note column wrap text */
+      td:nth-child(5) {
+        word-wrap: break-word;
+        max-width: 0;
+        overflow-wrap: break-word;
+      }
+
+      /* Status column styling */
+      td:nth-child(4) {
+        text-align: center;
+        font-weight: bold;
+      }
+
+      /* Success status */
+      td:nth-child(4):contains("200") {
+        color: #4CAF50;
+      }
+
+      /* Error status */
+      td:nth-child(4):contains("400"),
+      td:nth-child(4):contains("500"),
+      td:nth-child(4):contains("Error") {
+        color: #f44336;
+      }
+
+      /* Download link styling */
+      td:nth-child(6) {
+        text-align: center;
+      }
+
+      td:nth-child(6) a {
+        padding: 4px 8px;
+        background-color: #1a1a1a;
+        border: 1px solid #444;
+        border-radius: 3px;
+        font-size: 0.8em;
+      }
+
+      td:nth-child(6) a:hover {
+        background-color: #2a2a2a;
+        color: #797af2;
       }
     </style>
   </head>
@@ -233,34 +322,36 @@
       {% endif %}
     </div>
 
-    <table id="historyTable">
-      <thead>
-        <tr>
-          <th onclick="sortTable(0)">User</th>
-          <th onclick="sortTable(1)">File</th>
-          <th onclick="sortTable(2)">Uploaded</th>
-          <th onclick="sortTable(3)">Status</th>
-          <th onclick="sortTable(4)">Revision Note</th>
-          <th>Download</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for row in history %}
-        <tr>
-          <td>{{ row.user_email }}</td>
-          <td>{{ row.uploaded_filename }}</td>
-          <td>{{ row.upload_time|localtime }}</td>
-          <td>{{ row.status_code }}</td>
-          <td>{{ row.revision_note }}</td>
-          <td>
-            <a href="{{ url_for('download_json_blob', history_id=row.id) }}"
-              >Download</a
-            >
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <div class="table-container">
+      <table id="historyTable">
+        <thead>
+          <tr>
+            <th onclick="sortTable(0)">User</th>
+            <th onclick="sortTable(1)">File</th>
+            <th onclick="sortTable(2)">Uploaded</th>
+            <th onclick="sortTable(3)">Status</th>
+            <th onclick="sortTable(4)">Revision Note</th>
+            <th>Download</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in history %}
+          <tr>
+            <td>{{ row.user_email }}</td>
+            <td>{{ row.uploaded_filename }}</td>
+            <td>{{ row.upload_time|localtime }}</td>
+            <td class="status-{{ row.status_code }}">{{ row.status_code }}</td>
+            <td>{{ row.revision_note }}</td>
+            <td>
+              <a href="{{ url_for('download_json_blob', history_id=row.id) }}"
+                >Download</a
+              >
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
 
     {% if pagination.pages > 1 %}
     <div class="pagination">
@@ -373,7 +464,7 @@
                       <td>${entry.user_email}</td>
                       <td>${entry.uploaded_filename}</td>
                       <td>${formatDateTime(entry.upload_time)}</td>
-                      <td>${entry.status_code}</td>
+                      <td class="status-${entry.status_code}">${entry.status_code}</td>
                       <td>${entry.revision_note}</td>
                       <td><a href="/download_json/${entry.id}">Download</a></td>
                     `;
