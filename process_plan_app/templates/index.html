@@ -269,9 +269,11 @@
           multiple
           required
         />
-        <small style="color: #999; display: block; margin-top: 5px;">
-          You can select multiple JSON files. Files will be processed sequentially. 
-          Processing stops on first error (non-200 status code).
+        <small style="color: #999; display: block; margin-top: 5px">
+          You can select multiple JSON files. Files will be processed
+          sequentially. Processing stops on first error (non-200 status code).
+          Each file has a 10-minute timeout (600 seconds) for MES API
+          processing.
         </small>
 
         <label for="revision_note"
@@ -302,7 +304,10 @@
             max="100"
             style="width: 100%"
           ></progress>
-          <div id="fileProgress" style="margin-top: 10px; font-size: 0.9em; color: #999;"></div>
+          <div
+            id="fileProgress"
+            style="margin-top: 10px; font-size: 0.9em; color: #999"
+          ></div>
         </div>
 
         <div id="importResult" style="margin-top: 20px"></div>
@@ -364,17 +369,34 @@
         const revisionNote = document.getElementById("revision_note").value;
         formData.append("revision_note", revisionNote);
 
-        const totalTimeout = 120000; // 2 minutes
-        const steps = 5;
+        // Calculate timeout based on number of files (600 seconds per file)
+        const totalFiles = fileInputs.length;
+        const timeoutPerFile = 600; // 10 minutes per file
+        const totalTimeout = totalFiles * timeoutPerFile;
+        const steps = Math.min(totalFiles * 6, 30); // 6 steps per file, max 30 steps
         const stepInterval = totalTimeout / steps;
         const stepProgress = 100 / steps;
         let currentStep = 1;
+
+        // Update progress message with file count and estimated time
+        const estimatedMinutes = Math.ceil(totalTimeout / 60);
+        progressMessage.innerHTML = `Processing ${totalFiles} file(s)...<br><small style="color:#999;">(Estimated time: up to ${estimatedMinutes} minutes. ${timeoutPerFile} seconds per file.)</small>`;
+        fileProgress.textContent = `Files: ${totalFiles} | Timeout: ${timeoutPerFile}s per file | Total: ${totalTimeout}s`;
 
         const intervalId = setInterval(() => {
           currentStep++;
           if (currentStep <= steps) {
             progressBar.value = currentStep * stepProgress;
-            progressMessage.textContent = `Step ${currentStep} of ${steps} completed...<br><small style="color:#999;">(This could take up to 3 min to create object and data models in MES. Please be patient.)</small>`;
+            const elapsedSeconds = Math.floor(
+              (currentStep * stepInterval) / 1000
+            );
+            const remainingSeconds = totalTimeout - elapsedSeconds;
+            const remainingMinutes = Math.ceil(remainingSeconds / 60);
+
+            progressMessage.innerHTML = `Step ${currentStep} of ${steps} completed...<br><small style="color:#999;">(Elapsed: ${elapsedSeconds}s | Remaining: ~${remainingMinutes}min | Processing ${totalFiles} file(s))</small>`;
+            fileProgress.textContent = `Progress: ${Math.round(
+              (currentStep / steps) * 100
+            )}% | Time: ${elapsedSeconds}s/${totalTimeout}s`;
           }
         }, stepInterval);
 
@@ -399,34 +421,38 @@
           // Handle the response based on success/failure
           if (data.success) {
             progressMessage.textContent = `Upload complete - ${data.processed_count}/${data.total_files} files imported successfully`;
-            
+
             let resultsHtml = `<h4 style="color: #797af2;">✅ Batch Import Successful</h4>`;
             resultsHtml += `<p><strong>Total Files:</strong> ${data.total_files}</p>`;
             resultsHtml += `<p><strong>Successfully Imported:</strong> ${data.processed_count}</p>`;
             resultsHtml += `<p><strong>Message:</strong> ${data.message}</p>`;
-            
+
             // Display results for each file
             if (data.results && data.results.length > 0) {
               resultsHtml += `<h5 style="color: #797af2; margin-top: 20px;">File Results:</h5>`;
               data.results.forEach((result, index) => {
-                const statusColor = result.success ? '#4CAF50' : '#f44336';
-                const statusIcon = result.success ? '✅' : '❌';
-                
+                const statusColor = result.success ? "#4CAF50" : "#f44336";
+                const statusIcon = result.success ? "✅" : "❌";
+
                 resultsHtml += `
                   <div style="border: 1px solid #444; padding: 10px; margin: 10px 0; border-radius: 5px;">
-                    <p><strong>${index + 1}. ${result.filename}</strong> <span style="color: ${statusColor};">${statusIcon}</span></p>
+                    <p><strong>${index + 1}. ${
+                  result.filename
+                }</strong> <span style="color: ${statusColor};">${statusIcon}</span></p>
                     <p><strong>Status Code:</strong> ${result.status_code}</p>
-                    <pre style="white-space: pre-wrap; background: #1e1e1e; padding: 10px; border-radius: 5px; font-size: 0.9em; max-height: 200px; overflow-y: auto;">${result.response}</pre>
+                    <pre style="white-space: pre-wrap; background: #1e1e1e; padding: 10px; border-radius: 5px; font-size: 0.9em; max-height: 200px; overflow-y: auto;">${
+                      result.response
+                    }</pre>
                   </div>
                 `;
               });
             }
-            
+
             resultBox.innerHTML = resultsHtml;
           } else {
             // Handle error response
             progressMessage.textContent = `Upload failed - ${data.processed_count}/${data.total_files} files processed before error`;
-            
+
             let resultsHtml = `<h4 style="color: #f44336;">❌ Batch Import Failed</h4>`;
             resultsHtml += `<p><strong>Error:</strong> ${data.error}</p>`;
             resultsHtml += `<p><strong>Total Files:</strong> ${data.total_files}</p>`;
@@ -434,25 +460,33 @@
             if (data.failed_at) {
               resultsHtml += `<p><strong>Failed At:</strong> ${data.failed_at}</p>`;
             }
-            
+
             // Display results for processed files
             if (data.results && data.results.length > 0) {
               resultsHtml += `<h5 style="color: #797af2; margin-top: 20px;">File Results:</h5>`;
               data.results.forEach((result, index) => {
-                const statusColor = result.success ? '#4CAF50' : '#f44336';
-                const statusIcon = result.success ? '✅' : '❌';
-                
+                const statusColor = result.success ? "#4CAF50" : "#f44336";
+                const statusIcon = result.success ? "✅" : "❌";
+
                 resultsHtml += `
                   <div style="border: 1px solid #444; padding: 10px; margin: 10px 0; border-radius: 5px;">
-                    <p><strong>${index + 1}. ${result.filename}</strong> <span style="color: ${statusColor};">${statusIcon}</span></p>
+                    <p><strong>${index + 1}. ${
+                  result.filename
+                }</strong> <span style="color: ${statusColor};">${statusIcon}</span></p>
                     <p><strong>Status Code:</strong> ${result.status_code}</p>
-                    ${result.error ? `<p><strong>Error:</strong> <span style="color: #f44336;">${result.error}</span></p>` : ''}
-                    <pre style="white-space: pre-wrap; background: #1e1e1e; padding: 10px; border-radius: 5px; font-size: 0.9em; max-height: 200px; overflow-y: auto;">${result.response}</pre>
+                    ${
+                      result.error
+                        ? `<p><strong>Error:</strong> <span style="color: #f44336;">${result.error}</span></p>`
+                        : ""
+                    }
+                    <pre style="white-space: pre-wrap; background: #1e1e1e; padding: 10px; border-radius: 5px; font-size: 0.9em; max-height: 200px; overflow-y: auto;">${
+                      result.response
+                    }</pre>
                   </div>
                 `;
               });
             }
-            
+
             resultBox.innerHTML = resultsHtml;
           }
         } catch (err) {

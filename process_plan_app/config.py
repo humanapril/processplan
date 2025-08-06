@@ -15,7 +15,7 @@ class Config:
     MES_API_URL = "https://mes.dev.figure.ai:60088/system/webdev/BotQ-MES/Operations/OperationsRouteManual"
     MES_USERNAME = os.getenv('MES_USERNAME', 'figure')
     MES_PASSWORD = os.getenv('MES_PASSWORD', 'figure')
-    TIMEOUT_SECONDS = 600
+    TIMEOUT_SECONDS = 600  # 10 minutes per file - increased from 500s to handle larger process plans
     
     # Excel Processing Configuration
     EXCEL_CONFIG = {
