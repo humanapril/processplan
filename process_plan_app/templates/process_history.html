@@ -10,7 +10,8 @@
         color: #ccc;
         padding: 20px;
         margin: 0;
-        min-height: 100vh;
+        height: 100vh;
+        overflow: hidden;
         display: flex;
         flex-direction: column;
       }
@@ -19,6 +20,7 @@
         color: #797af2;
         margin-bottom: 20px;
         margin-top: 0;
+        flex-shrink: 0;
       }
 
       .controls {
@@ -28,6 +30,7 @@
         margin-bottom: 20px;
         flex-wrap: wrap;
         gap: 10px;
+        flex-shrink: 0;
       }
 
       .search-controls {
@@ -79,8 +82,30 @@
         cursor: not-allowed;
       }
 
+      .refresh-controls {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 10px;
+        flex-shrink: 0;
+      }
+
+      .refresh-status {
+        color: #999;
+        font-size: 0.8em;
+        font-style: italic;
+      }
+
+      .stats {
+        color: #999;
+        font-size: 0.9em;
+        margin-bottom: 10px;
+        flex-shrink: 0;
+      }
+
       .table-container {
         flex: 1;
+        overflow: hidden;
         display: flex;
         flex-direction: column;
         min-height: 0;
@@ -89,9 +114,18 @@
       table {
         width: 100%;
         border-collapse: collapse;
-        margin-bottom: 20px;
         flex: 1;
-        min-height: 400px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      thead {
+        flex-shrink: 0;
+      }
+
+      tbody {
+        flex: 1;
+        overflow-y: auto;
       }
 
       th,
@@ -121,23 +155,6 @@
 
       tr:hover {
         background-color: #2a2a2a;
-      }
-
-      tbody {
-        display: block;
-        overflow-y: auto;
-        max-height: calc(100vh - 300px);
-        min-height: 400px;
-      }
-
-      thead, tbody tr {
-        display: table;
-        width: 100%;
-        table-layout: fixed;
-      }
-
-      thead {
-        width: calc(100% - 17px); /* Account for scrollbar */
       }
 
       a {
@@ -183,27 +200,6 @@
         cursor: not-allowed;
       }
 
-      .stats {
-        color: #999;
-        font-size: 0.9em;
-        margin-bottom: 10px;
-        flex-shrink: 0;
-      }
-
-      .refresh-controls {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-        margin-bottom: 10px;
-        flex-shrink: 0;
-      }
-
-      .refresh-status {
-        color: #999;
-        font-size: 0.8em;
-        font-style: italic;
-      }
-
       .back-link {
         display: inline-block;
         margin-bottom: 20px;
@@ -237,14 +233,14 @@
       }
 
       /* Success status */
-      td:nth-child(4):contains("200") {
+      .status-200 {
         color: #4CAF50;
       }
 
       /* Error status */
-      td:nth-child(4):contains("400"),
-      td:nth-child(4):contains("500"),
-      td:nth-child(4):contains("Error") {
+      .status-400,
+      .status-500,
+      .status-Error {
         color: #f44336;
       }
 
