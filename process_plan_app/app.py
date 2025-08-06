@@ -754,13 +754,20 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
                                     # Process all rows for this step to collect materials (exclude Manual Entry)
                                     for _, row in step_rows.iterrows():
                                         if pd.notna(row.get("Parts")) and row.get("Tools") != "Manual Entry":
+                                            # Determine units - use "Unit" column if available, otherwise default to "each"
+                                            units_value = "each"  # default value
+                                            if "Unit" in row.index and pd.notna(row.get("Unit")):
+                                                units_value = str(row["Unit"]).strip()
+                                            elif "unit" in row.index and pd.notna(row.get("unit")):
+                                                units_value = str(row["unit"]).strip()
+                                            
                                             materials.append({
                                                 "inputMaterialPMlmId": "PLM_ID",
                                                 "materialName": "",
                                                 "quantity": int(row["Qty"]) if pd.notna(row["Qty"]) else 1,
                                                 "materialNumber": str(row["Parts"]).strip(),
                                                 "materialTitle": "",
-                                                "units": "each",
+                                                "units": units_value,
                                                 "scan": "True" if row["Scan"] else "False",
                                                 "parentIdentifier": "True" if row["Trace"] else "False"
                                             })
@@ -794,18 +801,21 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
                                     # Handle different tool types
                                     if pd.notna(first_row.get("Tools")):
                                         if first_row["Tools"] == "Manual Entry":
-                                            # Manual Entry sample
+                                            # Get the dynamic attribute name from Parts column
+                                            parts_value = str(first_row["Parts"]).strip() if pd.notna(first_row.get("Parts")) else "ManualEntry"
+                                            
+                                            # Manual Entry sample with dynamic attribute from Parts column
                                             manual_entry_sample = {
                                                 "instructions": first_row["Title"],
-                                                "sampleDefinitionName": "Weight",  # Use "Weight" as default for Manual Entry
+                                                "sampleDefinitionName": parts_value,
                                                 "plmId": "PLM_ID",
                                                 "sampleClass": "Manual Entry",
                                                 "sampleQty": int(first_row["Qty"]) if pd.notna(first_row["Qty"]) else 1,
                                                 "attributes": {
-                                                    "Weight": {
+                                                    parts_value: {
                                                         "DataType": "REAL",
                                                         "Required": True,
-                                                        "Description": "Weight",
+                                                        "Description": parts_value,
                                                         "Format": "#0.00",
                                                         "Order": "1",
                                                         "MinimumValue": "",
