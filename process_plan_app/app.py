@@ -722,7 +722,7 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
                                                 "MaximumValue": ""
                                             }
                                         }
-                                    }
+                                                                        }
                                     sample_definitions.append(confirm_sample)
 
                                     # Handle different tool types
@@ -748,7 +748,7 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
                                                 }
                                             }
                                             sample_definitions.append(manual_entry_sample)
-                                        elif pd.notna(first_row.get("Pset Program Number")):
+                                        elif first_row["Tools"] != "Manual Entry" and pd.notna(first_row.get("Pset Program Number")):
                                             # Torque sample
                                             torque_sample = {
                                                 "instructions": first_row["Title"],

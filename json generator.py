@@ -327,7 +327,7 @@ for filename in os.listdir(input_dir):
                                     }
                                 }
                                 segment["sampleDefinitions"].append(manual_entry_sample)
-                            elif pd.notna(first_row.get("Pset Program Number")):
+                            elif first_row["Tools"] != "Manual Entry" and pd.notna(first_row.get("Pset Program Number")):
                                 # Torque sample
                                 torque_sample = {
                                     "instructions": first_row["Title"],
