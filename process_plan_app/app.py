@@ -849,9 +849,92 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
 @app.route('/history')
 @login_required
 def process_history():
-    history = ProcessPlanHistory.query.order_by(ProcessPlanHistory.upload_time.desc()).all()
-    return render_template('process_history.html', history=history)
+    # Get pagination parameters
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 50, type=int)  # Default 50 entries per page
+    search = request.args.get('search', '', type=str)
+    
+    # Build query with search filter
+    query = ProcessPlanHistory.query
+    
+    if search:
+        query = query.filter(
+            db.or_(
+                ProcessPlanHistory.user_email.ilike(f'%{search}%'),
+                ProcessPlanHistory.uploaded_filename.ilike(f'%{search}%'),
+                ProcessPlanHistory.revision_note.ilike(f'%{search}%')
+            )
+        )
+    
+    # Order by upload time (newest first) and paginate
+    pagination = query.order_by(ProcessPlanHistory.upload_time.desc()).paginate(
+        page=page, 
+        per_page=per_page, 
+        error_out=False
+    )
+    
+    history = pagination.items
+    
+    return render_template('process_history.html', 
+                         history=history, 
+                         pagination=pagination,
+                         search=search,
+                         per_page=per_page)
 
+@app.route('/history/json')
+@login_required
+def process_history_json():
+    """AJAX endpoint to get history data in JSON format for auto-refresh"""
+    # Get pagination parameters
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 50, type=int)
+    search = request.args.get('search', '', type=str)
+    
+    # Build query with search filter
+    query = ProcessPlanHistory.query
+    
+    if search:
+        query = query.filter(
+            db.or_(
+                ProcessPlanHistory.user_email.ilike(f'%{search}%'),
+                ProcessPlanHistory.uploaded_filename.ilike(f'%{search}%'),
+                ProcessPlanHistory.revision_note.ilike(f'%{search}%')
+            )
+        )
+    
+    # Order by upload time (newest first) and paginate
+    pagination = query.order_by(ProcessPlanHistory.upload_time.desc()).paginate(
+        page=page, 
+        per_page=per_page, 
+        error_out=False
+    )
+    
+    # Convert history items to JSON-serializable format
+    history_data = []
+    for item in pagination.items:
+        history_data.append({
+            'id': item.id,
+            'user_email': item.user_email,
+            'uploaded_filename': item.uploaded_filename,
+            'upload_time': item.upload_time.isoformat() if item.upload_time else None,
+            'status_code': item.status_code,
+            'revision_note': item.revision_note
+        })
+    
+    return jsonify({
+        'history': history_data,
+        'pagination': {
+            'page': pagination.page,
+            'pages': pagination.pages,
+            'per_page': pagination.per_page,
+            'total': pagination.total,
+            'has_prev': pagination.has_prev,
+            'has_next': pagination.has_next,
+            'prev_num': pagination.prev_num,
+            'next_num': pagination.next_num
+        },
+        'search': search
+    })
 
 
 # ===  Create a route to download JSON from DB as a file === #

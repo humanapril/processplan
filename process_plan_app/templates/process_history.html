@@ -16,19 +16,68 @@
         margin-bottom: 20px;
       }
 
-      input[type="text"] {
-        width: 100%;
-        padding: 10px;
+      .controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
         margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .search-controls {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex: 1;
+      }
+
+      .pagination-controls {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+
+      input[type="text"] {
+        padding: 10px;
+        background-color: #1a1a1a;
+        border: 1px solid #444;
+        color: #ccc;
+        border-radius: 5px;
+        min-width: 200px;
+      }
+
+      select {
+        padding: 10px;
         background-color: #1a1a1a;
         border: 1px solid #444;
         color: #ccc;
         border-radius: 5px;
       }
 
+      button {
+        padding: 10px 15px;
+        background-color: #1a1a1a;
+        border: 1px solid #444;
+        color: #ccc;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background-color: #2a2a2a;
+        color: #797af2;
+      }
+
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
       table {
         width: 100%;
         border-collapse: collapse;
+        margin-bottom: 20px;
       }
 
       th,
@@ -44,6 +93,18 @@
         cursor: pointer;
       }
 
+      th:hover {
+        background-color: #2a2a2a;
+      }
+
+      tr:nth-child(even) {
+        background-color: #1a1a1a;
+      }
+
+      tr:hover {
+        background-color: #2a2a2a;
+      }
+
       a {
         color: #797af2;
         text-decoration: none;
@@ -51,6 +112,58 @@
 
       a:hover {
         text-decoration: underline;
+      }
+
+      .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        margin-top: 20px;
+      }
+
+      .pagination a, .pagination span {
+        padding: 8px 12px;
+        border: 1px solid #444;
+        background-color: #1a1a1a;
+        color: #ccc;
+        text-decoration: none;
+        border-radius: 3px;
+      }
+
+      .pagination a:hover {
+        background-color: #2a2a2a;
+        color: #797af2;
+      }
+
+      .pagination .current {
+        background-color: #797af2;
+        color: #fff;
+        border-color: #797af2;
+      }
+
+      .pagination .disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .stats {
+        color: #999;
+        font-size: 0.9em;
+        margin-bottom: 10px;
+      }
+
+      .refresh-controls {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+
+      .refresh-status {
+        color: #999;
+        font-size: 0.8em;
+        font-style: italic;
       }
 
       .back-link {
@@ -68,11 +181,57 @@
   <body>
     <h2>Process Plan Upload History</h2>
 
-    <input
-      type="text"
-      id="searchInput"
-      placeholder="Filter by user email or filename..."
-    />
+    <div class="refresh-controls">
+      <button onclick="refreshPage()" id="refreshBtn">🔄 Refresh Now</button>
+      <label for="autoRefresh">Auto-refresh:</label>
+      <select id="autoRefresh" onchange="updateAutoRefresh()">
+        <option value="0">Off</option>
+        <option value="5">Every 5 seconds</option>
+        <option value="10">Every 10 seconds</option>
+        <option value="30">Every 30 seconds</option>
+        <option value="60">Every minute</option>
+      </select>
+      <span class="refresh-status" id="refreshStatus"></span>
+    </div>
+
+    <div class="controls">
+      <div class="search-controls">
+        <form method="GET" action="{{ url_for('process_history') }}" style="display: flex; gap: 10px; align-items: center;">
+          <input
+            type="text"
+            name="search"
+            value="{{ search }}"
+            placeholder="Filter by user email, filename, or revision note..."
+          />
+          <button type="submit">Search</button>
+          {% if search %}
+            <a href="{{ url_for('process_history') }}" style="color: #999;">Clear</a>
+          {% endif %}
+        </form>
+      </div>
+      
+      <div class="pagination-controls">
+        <form method="GET" action="{{ url_for('process_history') }}" style="display: flex; gap: 10px; align-items: center;">
+          {% if search %}
+            <input type="hidden" name="search" value="{{ search }}" />
+          {% endif %}
+          <label for="per_page">Entries per page:</label>
+          <select name="per_page" id="per_page" onchange="this.form.submit()">
+            <option value="25" {% if per_page == 25 %}selected{% endif %}>25</option>
+            <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
+            <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
+            <option value="200" {% if per_page == 200 %}selected{% endif %}>200</option>
+          </select>
+        </form>
+      </div>
+    </div>
+
+    <div class="stats">
+      Showing {{ pagination.items|length }} of {{ pagination.total }} entries
+      {% if search %}
+        (filtered by "{{ search }}")
+      {% endif %}
+    </div>
 
     <table id="historyTable">
       <thead>
@@ -103,20 +262,182 @@
       </tbody>
     </table>
 
-    <script>
-      // Filter rows
-      document
-        .getElementById("searchInput")
-        .addEventListener("keyup", function () {
-          const filter = this.value.toLowerCase();
-          const rows = document.querySelectorAll("#historyTable tbody tr");
-          rows.forEach((row) => {
-            const text = row.innerText.toLowerCase();
-            row.style.display = text.includes(filter) ? "" : "none";
-          });
-        });
+    {% if pagination.pages > 1 %}
+    <div class="pagination">
+      {% if pagination.has_prev %}
+        <a href="{{ url_for('process_history', page=pagination.prev_num, per_page=per_page, search=search) }}">&laquo; Previous</a>
+      {% else %}
+        <span class="disabled">&laquo; Previous</span>
+      {% endif %}
 
-      // Sort table
+      {% for page_num in pagination.iter_pages(left_edge=2, left_current=2, right_current=3, right_edge=2) %}
+        {% if page_num %}
+          {% if page_num != pagination.page %}
+            <a href="{{ url_for('process_history', page=page_num, per_page=per_page, search=search) }}">{{ page_num }}</a>
+          {% else %}
+            <span class="current">{{ page_num }}</span>
+          {% endif %}
+        {% else %}
+          <span>...</span>
+        {% endif %}
+      {% endfor %}
+
+      {% if pagination.has_next %}
+        <a href="{{ url_for('process_history', page=pagination.next_num, per_page=per_page, search=search) }}">Next &raquo;</a>
+      {% else %}
+        <span class="disabled">Next &raquo;</span>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <script>
+      let autoRefreshInterval = null;
+      let lastRefreshTime = new Date();
+
+      // Function to refresh the page
+      function refreshPage() {
+        const refreshBtn = document.getElementById('refreshBtn');
+        const refreshStatus = document.getElementById('refreshStatus');
+        
+        // Disable button and show loading
+        refreshBtn.disabled = true;
+        refreshBtn.textContent = '⏳ Refreshing...';
+        refreshStatus.textContent = 'Refreshing...';
+        
+        // Reload the page with current parameters
+        const currentUrl = new URL(window.location);
+        window.location.reload();
+      }
+
+      // Function to update auto-refresh settings
+      function updateAutoRefresh() {
+        const autoRefreshSelect = document.getElementById('autoRefresh');
+        const refreshStatus = document.getElementById('refreshStatus');
+        const interval = parseInt(autoRefreshSelect.value);
+        
+        // Clear existing interval
+        if (autoRefreshInterval) {
+          clearInterval(autoRefreshInterval);
+          autoRefreshInterval = null;
+        }
+        
+        // Set new interval if enabled
+        if (interval > 0) {
+          autoRefreshInterval = setInterval(() => {
+            const now = new Date();
+            const timeSinceLastRefresh = Math.floor((now - lastRefreshTime) / 1000);
+            refreshStatus.textContent = `Auto-refreshing in ${interval - timeSinceLastRefresh} seconds...`;
+            
+            if (timeSinceLastRefresh >= interval) {
+              refreshPage();
+            }
+          }, 1000);
+          
+          refreshStatus.textContent = `Auto-refresh enabled (${interval}s)`;
+        } else {
+          refreshStatus.textContent = 'Auto-refresh disabled';
+        }
+      }
+
+      // Function to check for new entries (AJAX approach for smoother experience)
+      function checkForNewEntries() {
+        const currentUrl = new URL(window.location);
+        const params = new URLSearchParams(currentUrl.search);
+        
+        // Add a timestamp to avoid caching
+        params.set('_t', Date.now());
+        
+        // Use the JSON endpoint for more efficient updates
+        fetch(`/history/json?${params.toString()}`)
+          .then(response => response.json())
+          .then(data => {
+            const currentTableBody = document.querySelector('#historyTable tbody');
+            const currentStats = document.querySelector('.stats');
+            
+            if (currentTableBody && data.history) {
+              // Check if there are new entries by comparing the first row
+              const currentFirstRow = currentTableBody.querySelector('tr');
+              const newFirstEntry = data.history[0];
+              
+              if (newFirstEntry && currentFirstRow) {
+                const currentFirstRowText = currentFirstRow.textContent;
+                const newFirstRowText = `${newFirstEntry.user_email}${newFirstEntry.uploaded_filename}${newFirstEntry.upload_time}${newFirstEntry.status_code}${newFirstEntry.revision_note}`;
+                
+                // If the first entry is different, there are new entries
+                if (newFirstRowText !== currentFirstRowText) {
+                  // Update the table body
+                  currentTableBody.innerHTML = '';
+                  data.history.forEach(entry => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                      <td>${entry.user_email}</td>
+                      <td>${entry.uploaded_filename}</td>
+                      <td>${formatDateTime(entry.upload_time)}</td>
+                      <td>${entry.status_code}</td>
+                      <td>${entry.revision_note}</td>
+                      <td><a href="/download_json/${entry.id}">Download</a></td>
+                    `;
+                    currentTableBody.appendChild(row);
+                  });
+                  
+                  // Update stats
+                  if (currentStats) {
+                    const searchText = data.search ? ` (filtered by "${data.search}")` : '';
+                    currentStats.innerHTML = `Showing ${data.history.length} of ${data.pagination.total} entries${searchText}`;
+                  }
+                  
+                  // Show notification
+                  const refreshStatus = document.getElementById('refreshStatus');
+                  refreshStatus.textContent = 'New entries detected and loaded!';
+                  refreshStatus.style.color = '#4CAF50';
+                  
+                  // Reset color after 3 seconds
+                  setTimeout(() => {
+                    const interval = parseInt(document.getElementById('autoRefresh').value);
+                    if (interval > 0) {
+                      refreshStatus.textContent = `Auto-refresh enabled (${interval}s)`;
+                    } else {
+                      refreshStatus.textContent = 'Auto-refresh disabled';
+                    }
+                    refreshStatus.style.color = '#999';
+                  }, 3000);
+                }
+              }
+            }
+          })
+          .catch(error => {
+            console.error('Error checking for new entries:', error);
+          });
+      }
+
+      // Function to format datetime for display
+      function formatDateTime(isoString) {
+        if (!isoString) return '';
+        
+        const date = new Date(isoString);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+        
+        if (diffMins < 1) return 'Just now';
+        if (diffMins < 60) return `${diffMins}m ago`;
+        if (diffHours < 24) return `${diffHours}h ago`;
+        if (diffDays < 7) return `${diffDays}d ago`;
+        
+        return date.toLocaleString();
+      }
+
+      // Initialize auto-refresh
+      document.addEventListener('DOMContentLoaded', function() {
+        updateAutoRefresh();
+        
+        // Set up periodic check for new entries (every 5 seconds)
+        setInterval(checkForNewEntries, 5000);
+      });
+
+      // Sort table (client-side sorting for current page only)
       function sortTable(colIndex) {
         const table = document.getElementById("historyTable");
         const rows = Array.from(table.rows).slice(1);
