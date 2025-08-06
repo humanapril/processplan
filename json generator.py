@@ -20,23 +20,148 @@ predefined_segment = {
             "instructions": "Place the part on the tester device",
             "sampleDefinitionName": "",
             "plmId": "PLM_ID",
-            "sampleClass": "Actuator EOL Tester",
-            "toolResourceInstance": "Actuator_Tester_1",
+            "sampleClass": "EOL_Tester",
+            "toolResourceInstance": "EOL_Tester_1",
             "sampleQty": 1,
             "settings": {
                 "Configuration N/L/R": "N"
             },
             "attributes": {
-                "PassFail": {"DataType": "BOOLEAN", "Required": True, "Description": "Pass or fail result", "Format": "", "Order": 1, "MinimumValue": "", "MaximumValue": ""},
-                "TestRevision": {"DataType": "STRING", "Required": True, "Description": "Revision code", "Format": "DW", "Order": 2, "MinimumValue": "", "MaximumValue": ""},
-                "TestCount": {"DataType": "INTEGER", "Required": True, "Description": "Number of test repetitions", "Format": "", "Order": 3, "MinimumValue": "", "MaximumValue": ""},
-                "TestTimestamp": {"DataType": "STRING", "Required": True, "Description": "Time of test", "Format": "", "Order": 4, "MinimumValue": "", "MaximumValue": ""},
-                "TestDuration": {"DataType": "INTEGER", "Required": True, "Description": "Duration of test (in s)", "Format": "", "Order": 5, "MinimumValue": "", "MaximumValue": ""},
-                "RejectCode": {"DataType": "STRING", "Required": True, "Description": "Code for rejection reason", "Format": "", "Order": 6, "MinimumValue": "", "MaximumValue": ""},
-                "RejectReason": {"DataType": "STRING", "Required": True, "Description": "Description of rejection reason", "Format": "DW", "Order": 7, "MinimumValue": "", "MaximumValue": ""},
-                "URLString": {"DataType": "STRING", "Required": True, "Description": "Link to related documentation", "Format": "DW", "Order": 7, "MinimumValue": "", "MaximumValue": ""},
-                "OperatorDetails": {"DataType": "STRING", "Required": True, "Description": "Name or ID of operator", "Format": "DW", "Order": 8, "MinimumValue": "", "MaximumValue": ""},
-                "TestType": {"DataType": "STRING", "Required": True, "Description": "Type of test performed", "Format": "DW", "Order": 9, "MinimumValue": "", "MaximumValue": ""}
+                "testUUID": {
+                    "DataType": "STRING",
+                    "Required": True,
+                    "Description": "Defined by Test SW",
+                    "Format": "",
+                    "Order": 1,
+                    "MinimumValue": "",
+                    "MaximumValue": ""
+                },
+                "testType": {
+                    "DataType": "STRING",
+                    "Required": True,
+                    "Description": "Test type, e.g. battery-pre-potting",
+                    "Format": "",
+                    "Order": 2,
+                    "MinimumValue": "",
+                    "MaximumValue": ""
+                },
+                "testStatus": {
+                    "DataType": "STRING",
+                    "Required": True,
+                    "Description": "Status of test: PASS, FAIL, or ERROR",
+                    "Format": "",
+                    "Order": 3,
+                    "MinimumValue": "",
+                    "MaximumValue": ""
+                },
+                "testErrorCode": {
+                    "DataType": "INTEGER",
+                    "Required": True,
+                    "Description": "Classifies type of error encountered (e.g., 0 if none)",
+                    "Format": "",
+                    "Order": 4,
+                    "MinimumValue": "",
+                    "MaximumValue": ""
+                },
+                "testErrors": {
+                    "DataType": "STRING",
+                    "Required": True,
+                    "Description": "List of errors separated by semicolon",
+                    "Format": "",
+                    "Order": 5,
+                    "MinimumValue": "",
+                    "MaximumValue": ""
+                },
+                "rejectCode": {
+                    "DataType": "INTEGER",
+                    "Required": True,
+                    "Description": "Reject code classifying error type",
+                    "Format": "",
+                    "Order": 6,
+                    "MinimumValue": "",
+                    "MaximumValue": ""
+                },
+                "rejectReason": {
+                    "DataType": "STRING",
+                    "Required": True,
+                    "Description": "List of failed test parameters separated by semicolon",
+                    "Format": "",
+                    "Order": 7,
+                    "MinimumValue": "",
+                    "MaximumValue": ""
+                },
+                "testRevision": {
+                    "DataType": "STRING",
+                    "Required": True,
+                    "Description": "Revision code",
+                    "Format": "",
+                    "Order": 8,
+                    "MinimumValue": "",
+                    "MaximumValue": ""
+                },
+                "testCount": {
+                    "DataType": "INTEGER",
+                    "Required": True,
+                    "Description": "Number of tests run since permission granted",
+                    "Format": "",
+                    "Order": 9,
+                    "MinimumValue": "",
+                    "MaximumValue": ""
+                },
+                "testTimestamp": {
+                    "DataType": "STRING",
+                    "Required": True,
+                    "Description": "Timestamp in 'YYYY-MM-DD HH:MM:SS UTC' format",
+                    "Format": "YYYY-MM-DD HH:mm:ss UTC",
+                    "Order": 10,
+                    "MinimumValue": "",
+                    "MaximumValue": ""
+                },
+                "testDuration": {
+                    "DataType": "STRING",
+                    "Required": True,
+                    "Description": "Duration of test in 'HH:MM:SS' format",
+                    "Format": "HH:MM:SS",
+                    "Order": 11,
+                    "MinimumValue": "",
+                    "MaximumValue": ""
+                },
+                "urlString": {
+                    "DataType": "STRING",
+                    "Required": True,
+                    "Description": "URL to detailed test report",
+                    "Format": "URL",
+                    "Order": 12,
+                    "MinimumValue": "",
+                    "MaximumValue": ""
+                },
+                "operatorUserName": {
+                    "DataType": "STRING",
+                    "Required": True,
+                    "Description": "User name of operator starting tests",
+                    "Format": "",
+                    "Order": 13,
+                    "MinimumValue": "",
+                    "MaximumValue": ""
+                },
+                "operatorLevel": {
+                    "DataType": "STRING",
+                    "Required": True,
+                    "Description": "Operator level, e.g., OPERATOR or ADMIN",
+                    "Format": "",
+                    "Order": 14,
+                    "MinimumValue": "",
+                    "MaximumValue": ""
+                },
+                "testMetadata": {
+                    "DataType": "STRING",
+                    "Required": True,
+                    "Description": "Catch-all JSON string with additional test info",
+                    "Format": "JSON string",
+                    "Order": 15,
+                    "MinimumValue": "",
+                    "MaximumValue": ""
+                }
             }
         }
     ],

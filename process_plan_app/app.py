@@ -412,39 +412,93 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
                                         "MinimumValue": "",
                                         "MaximumValue": ""
                                     },
-                                    "testStartTime": {
-                                        "DataType": "STRING",
+                                    "rejectCode": {
+                                        "DataType": "INTEGER",
                                         "Required": True,
-                                        "Description": "ISO 8601 timestamp when test started",
+                                        "Description": "Reject code classifying error type",
                                         "Format": "",
                                         "Order": 6,
                                         "MinimumValue": "",
                                         "MaximumValue": ""
                                     },
-                                    "testEndTime": {
+                                    "rejectReason": {
                                         "DataType": "STRING",
                                         "Required": True,
-                                        "Description": "ISO 8601 timestamp when test ended",
+                                        "Description": "List of failed test parameters separated by semicolon",
                                         "Format": "",
                                         "Order": 7,
                                         "MinimumValue": "",
                                         "MaximumValue": ""
                                     },
-                                    "testDuration": {
-                                        "DataType": "INTEGER",
+                                    "testRevision": {
+                                        "DataType": "STRING",
                                         "Required": True,
-                                        "Description": "Test duration in seconds",
+                                        "Description": "Revision code",
                                         "Format": "",
                                         "Order": 8,
                                         "MinimumValue": "",
                                         "MaximumValue": ""
                                     },
-                                    "testResults": {
-                                        "DataType": "STRING",
+                                    "testCount": {
+                                        "DataType": "INTEGER",
                                         "Required": True,
-                                        "Description": "JSON string containing test results",
+                                        "Description": "Number of tests run since permission granted",
                                         "Format": "",
                                         "Order": 9,
+                                        "MinimumValue": "",
+                                        "MaximumValue": ""
+                                    },
+                                    "testTimestamp": {
+                                        "DataType": "STRING",
+                                        "Required": True,
+                                        "Description": "Timestamp in 'YYYY-MM-DD HH:MM:SS UTC' format",
+                                        "Format": "YYYY-MM-DD HH:mm:ss UTC",
+                                        "Order": 10,
+                                        "MinimumValue": "",
+                                        "MaximumValue": ""
+                                    },
+                                    "testDuration": {
+                                        "DataType": "STRING",
+                                        "Required": True,
+                                        "Description": "Duration of test in 'HH:MM:SS' format",
+                                        "Format": "HH:MM:SS",
+                                        "Order": 11,
+                                        "MinimumValue": "",
+                                        "MaximumValue": ""
+                                    },
+                                    "urlString": {
+                                        "DataType": "STRING",
+                                        "Required": True,
+                                        "Description": "URL to detailed test report",
+                                        "Format": "URL",
+                                        "Order": 12,
+                                        "MinimumValue": "",
+                                        "MaximumValue": ""
+                                    },
+                                    "operatorUserName": {
+                                        "DataType": "STRING",
+                                        "Required": True,
+                                        "Description": "User name of operator starting tests",
+                                        "Format": "",
+                                        "Order": 13,
+                                        "MinimumValue": "",
+                                        "MaximumValue": ""
+                                    },
+                                    "operatorLevel": {
+                                        "DataType": "STRING",
+                                        "Required": True,
+                                        "Description": "Operator level, e.g., OPERATOR or ADMIN",
+                                        "Format": "",
+                                        "Order": 14,
+                                        "MinimumValue": "",
+                                        "MaximumValue": ""
+                                    },
+                                    "testMetadata": {
+                                        "DataType": "STRING",
+                                        "Required": True,
+                                        "Description": "Catch-all JSON string with additional test info",
+                                        "Format": "JSON string",
+                                        "Order": 15,
                                         "MinimumValue": "",
                                         "MaximumValue": ""
                                     }
