@@ -898,6 +898,25 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
                                             "actionSettings": {}
                                         })
 
+                                    # Add Record Picture custom action if Tools contains USB or Camera
+                                    if pd.notna(first_row.get("Tools")):
+                                        tools_value = str(first_row["Tools"]).lower()
+                                        if "usb" in tools_value or "camera" in tools_value:
+                                            # Get quantity from Qty column, default to 1 if not available
+                                            quantity_value = int(first_row["Qty"]) if pd.notna(first_row.get("Qty")) else 1
+                                            
+                                            # Get description from Description column, default to empty string if not available
+                                            description_value = str(first_row["Description"]).strip() if pd.notna(first_row.get("Description")) else ""
+                                            
+                                            custom_actions.append({
+                                                "actionType": "Record Picture",
+                                                "actionTarget": "",
+                                                "actionSettings": {
+                                                    "quantity": quantity_value,
+                                                    "imageDetail": description_value
+                                                }
+                                            })
+
                                     if custom_actions:
                                         segment["customActions"] = custom_actions
 
