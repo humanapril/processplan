@@ -228,6 +228,20 @@ for filename in os.listdir(input_dir):
             data_df["Step"] = data_df["Step"].fillna("").astype(str).str.zfill(3)
             data_df["Scan"] = data_df["Scan"].astype(str).str.strip().str.lower().map(lambda x: True if x == "true" else False)
             data_df["Trace"] = data_df["Trace"].astype(str).str.strip().str.lower().map(lambda x: True if x == "true" else False)
+            
+            # Add Grade2 column processing - if not exists, create with default value
+            if "Grade2" not in data_df.columns:
+                data_df["Grade2"] = False
+            else:
+                # Convert Grade2 to boolean, treating empty/NaN as False
+                data_df["Grade2"] = data_df["Grade2"].fillna(False).astype(str).str.strip().str.lower().map(lambda x: True if x == "true" else False)
+            
+            # Add Route column processing - if not exists, create with default empty value
+            if "Route" not in data_df.columns:
+                data_df["Route"] = ""
+            else:
+                # Fill NaN values with empty string
+                data_df["Route"] = data_df["Route"].fillna("")
 
             # Build operations
             for station, group in data_df.groupby("Station"):
@@ -308,6 +322,18 @@ for filename in os.listdir(input_dir):
                         # Process all rows for this step to collect materials (exclude Manual Entry)
                         for _, row in step_rows.iterrows():
                             if pd.notna(row.get("Parts")) and row.get("Tools") != "Manual Entry":
+                                # Get Grade2 and Route values
+                                grade2_value = row.get("Grade2", False)
+                                route_value = str(row.get("Route", "")).strip()
+                                
+                                # Determine isSerialized based on Grade2
+                                # If Grade2 is True (lowercase true), then isSerialized is "False"
+                                # If Grade2 is False or no value, then isSerialized is "True"
+                                if grade2_value:
+                                    is_serialized = "False"
+                                else:
+                                    is_serialized = "True"
+                                
                                 materials.append({
                                     "inputMaterialPMlmId": "PLM_ID",
                                     "materialName": "",
@@ -316,7 +342,9 @@ for filename in os.listdir(input_dir):
                                     "materialTitle": "",
                                     "units": "each",
                                     "scan": "True" if row["Scan"] else "False",
-                                    "parentIdentifier": "True" if row["Trace"] else "False"
+                                    "parentIdentifier": "True" if row["Trace"] else "False",
+                                    "isSerialized": is_serialized,
+                                    "requiredLotStatus": route_value
                                 })
 
                         # Use the first row for segment details
