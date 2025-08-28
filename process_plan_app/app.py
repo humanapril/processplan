@@ -659,6 +659,27 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
                         data_df["Step"] = data_df["Step"].fillna("").astype(str).str.zfill(3)
                         data_df["Scan"] = data_df["Scan"].astype(str).str.lower().eq("true")
                         data_df["Trace"] = data_df["Trace"].astype(str).str.lower().eq("true")
+                        
+                        # Add Grade2 column processing - if not exists, create with default value
+                        if "Grade2" not in data_df.columns:
+                            data_df["Grade2"] = False
+                            logger.info(f"⚠️  Grade2 column not found, created with default value: False")
+                        else:
+                            # Convert Grade2 to boolean, treating empty/NaN as False
+                            data_df["Grade2"] = data_df["Grade2"].fillna(False).astype(str).str.strip().str.lower().map(lambda x: True if x == "true" else False)
+                            logger.info(f"✅ Grade2 column found with values: {data_df['Grade2'].unique()}")
+                        
+                        # Add Route column processing - if not exists, create with default empty value
+                        if "Route" not in data_df.columns:
+                            data_df["Route"] = ""
+                            logger.info(f"⚠️  Route column not found, created with default value: empty string")
+                        else:
+                            # Fill NaN values with empty string
+                            data_df["Route"] = data_df["Route"].fillna("")
+                            logger.info(f"✅ Route column found with values: {data_df['Route'].unique()}")
+                        
+                        logger.info(f"📊 Available columns: {list(data_df.columns)}")
+                        logger.info(f"📊 Data shape: {data_df.shape}")
 
                         for station, group in data_df.groupby("Station"):
                             station_int = int(station)
@@ -761,6 +782,18 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
                                             elif "unit" in row.index and pd.notna(row.get("unit")):
                                                 units_value = str(row["unit"]).strip()
                                             
+                                            # Get Grade2 and Route values
+                                            grade2_value = row.get("Grade2", False)
+                                            route_value = str(row.get("Route", "")).strip()
+                                            
+                                            # Determine isSerialized based on Grade2
+                                            # If Grade2 is True (lowercase true), then isSerialized is "False"
+                                            # If Grade2 is False or no value, then isSerialized is "True"
+                                            if grade2_value:
+                                                is_serialized = "False"
+                                            else:
+                                                is_serialized = "True"
+                                            
                                             materials.append({
                                                 "inputMaterialPMlmId": "PLM_ID",
                                                 "materialName": "",
@@ -769,8 +802,13 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
                                                 "materialTitle": "",
                                                 "units": units_value,
                                                 "scan": "True" if row["Scan"] else "False",
-                                                "parentIdentifier": "True" if row["Trace"] else "False"
+                                                "parentIdentifier": "True" if row["Trace"] else "False",
+                                                "isSerialized": is_serialized,
+                                                "requiredLotStatus": route_value
                                             })
+                                            
+                                            # Log the new attributes being added
+                                            logger.info(f"✅ Added material: {row.get('Parts')} with isSerialized: {is_serialized}, requiredLotStatus: '{route_value}'")
 
                                     # Use the first row for segment details
                                     first_row = step_rows.iloc[0]
