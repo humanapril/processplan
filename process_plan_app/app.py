@@ -794,7 +794,8 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
                                             else:
                                                 is_serialized = "True"
                                             
-                                            materials.append({
+                                            # Create material object
+                                            material = {
                                                 "inputMaterialPMlmId": "PLM_ID",
                                                 "materialName": "",
                                                 "quantity": int(row["Qty"]) if pd.notna(row["Qty"]) else 1,
@@ -805,7 +806,40 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
                                                 "parentIdentifier": "True" if row["Trace"] else "False",
                                                 "isSerialized": is_serialized,
                                                 "requiredLotStatus": route_value
-                                            })
+                                            }
+                                            
+                                            # Process alternates if "Alternates" column has value
+                                            alternates_value = str(row.get("Alternates", "")).strip() if pd.notna(row.get("Alternates")) else ""
+                                            alt_material_title_value = str(row.get("Alt Material Title", "")).strip() if pd.notna(row.get("Alt Material Title")) else ""
+                                            
+                                            # Only add alternates if "Alternates" column has value
+                                            if alternates_value:
+                                                # Split alternates by comma and clean up
+                                                alternate_materials = [alt.strip() for alt in alternates_value.split(",") if alt.strip()]
+                                                
+                                                # Split alt material titles by comma if available
+                                                alternate_titles = []
+                                                if alt_material_title_value:
+                                                    alternate_titles = [title.strip() for title in alt_material_title_value.split(",") if title.strip()]
+                                                
+                                                # Create alternates array
+                                                alternates_array = []
+                                                for idx, alt_material_num in enumerate(alternate_materials):
+                                                    # Get corresponding title by index, or use empty string if not available
+                                                    alt_title = alternate_titles[idx] if idx < len(alternate_titles) else ""
+                                                    
+                                                    alternates_array.append({
+                                                        "inputMaterialPMlmId": "PLM_ID",
+                                                        "materialName": "",
+                                                        "materialNumber": alt_material_num,
+                                                        "materialTitle": alt_title
+                                                    })
+                                                
+                                                # Add alternates to material object
+                                                material["alternates"] = alternates_array
+                                                logger.info(f"✅ Added {len(alternates_array)} alternate(s) to material: {row.get('Parts')}")
+                                            
+                                            materials.append(material)
                                             
                                             # Log the new attributes being added
                                             logger.info(f"✅ Added material: {row.get('Parts')} with isSerialized: {is_serialized}, requiredLotStatus: '{route_value}'")
