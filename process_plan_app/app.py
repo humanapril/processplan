@@ -814,13 +814,13 @@ def process_excel_sheets_to_jsons(excel_file_path, output_dir):
                                             
                                             # Only add alternates if "Alternates" column has value
                                             if alternates_value:
-                                                # Split alternates by comma and clean up
-                                                alternate_materials = [alt.strip() for alt in alternates_value.split(",") if alt.strip()]
+                                                # Split alternates by comma and clean up (remove brackets [])
+                                                alternate_materials = [alt.strip().strip("[]") for alt in alternates_value.split(",") if alt.strip()]
                                                 
-                                                # Split alt material titles by comma if available
+                                                # Split alt material titles by comma if available (remove brackets [])
                                                 alternate_titles = []
                                                 if alt_material_title_value:
-                                                    alternate_titles = [title.strip() for title in alt_material_title_value.split(",") if title.strip()]
+                                                    alternate_titles = [title.strip().strip("[]") for title in alt_material_title_value.split(",") if title.strip()]
                                                 
                                                 # Create alternates array
                                                 alternates_array = []
